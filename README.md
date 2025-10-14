@@ -1,4 +1,4 @@
-# React Dashboard Template
+# MBS Dashboard & Billing Solution
 
 Quick starter React project (Vite) with a single-page dashboard that includes:
 - Reports page (charts & metrics)
