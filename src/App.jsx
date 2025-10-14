@@ -16,7 +16,7 @@ import renderInventory from "./components/Inventory";
 import renderProfile from "./components/Profile";
 import Billing from "./components/Billing";
 import Calendar from "./components/Calendar";
-import CustomerManager from "./components/CustomerManager"
+import ClientGrid from "./components/Customers";
 
 // --- Utility functions ---
 function startOfMonth(date) {
@@ -193,7 +193,7 @@ export default function App() {
         )}
         {currentPage === "billing" && <Billing />}
         {currentPage === "inventory" && renderInventory()}
-        {currentPage === "Customer" && CustomerManager()}
+        {currentPage === "customer" && <ClientGrid />}
         {currentPage === "profile" && renderProfile()}
       </div>
     </div>
