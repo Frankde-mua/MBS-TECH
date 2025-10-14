@@ -16,6 +16,7 @@ import renderInventory from "./components/Inventory";
 import renderProfile from "./components/Profile";
 import Billing from "./components/Billing";
 import Calendar from "./components/Calendar";
+import CustomerManager from "./components/CustomerManager"
 
 // --- Utility functions ---
 function startOfMonth(date) {
@@ -139,6 +140,16 @@ export default function App() {
                 Inventory
               </li>
               <li
+                onClick={() => setCurrentPage("customer")}
+                className={`cursor-pointer ${
+                  currentPage === "customer"
+                    ? "text-indigo-600 font-medium"
+                    : ""
+                }`}
+              >
+                Customer
+              </li>
+              <li
                 onClick={() => setCurrentPage("profile")}
                 className={`cursor-pointer ${
                   currentPage === "profile"
@@ -182,6 +193,7 @@ export default function App() {
         )}
         {currentPage === "billing" && <Billing />}
         {currentPage === "inventory" && renderInventory()}
+        {currentPage === "Customer" && CustomerManager()}
         {currentPage === "profile" && renderProfile()}
       </div>
     </div>

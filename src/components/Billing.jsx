@@ -64,7 +64,7 @@ const Billing = () => {
                 }`}
               >
                 <div className="font-medium text-sm">{s.name}</div>
-                <div className="text-xs text-slate-500">R{s.price}</div>
+                <div className="text-xs text-slate-500">R{s.price}.00</div>
               </div>
             ))}
           </div>
@@ -116,19 +116,19 @@ const Billing = () => {
                   return (
                     <tr key={s.id} className="border-b">
                       <td className="py-2">{s.name}</td>
-                      <td className="py-2">R{s.price}</td>
+                      <td className="py-2">R{s.price}.00</td>
                     </tr>
                   );
                 })}
                 {manualList.map((m, idx) => (
                   <tr key={idx} className="border-b">
                     <td className="py-2">{m.name}</td>
-                    <td className="py-2">R{m.price}</td>
+                    <td className="py-2">R{m.price}.00</td>
                   </tr>
                 ))}
                 <tr>
                   <td className="py-2 font-medium">Total</td>
-                  <td className="py-2 font-semibold">R{totalBilling}</td>
+                  <td className="py-2 font-semibold">R{totalBilling}.00</td>
                 </tr>
               </tbody>
             </table>
@@ -198,12 +198,12 @@ const Billing = () => {
                 >
                   Print / Save PDF
                 </button>
-                <button
+                {/* <button class="hidden"
                   onClick={() => setShowInvoice(false)}
                   className="text-slate-600 text-sm hover:underline"
                 >
                   Close
-                </button>
+                </button> */}
               </div>
             </div>
           </div>

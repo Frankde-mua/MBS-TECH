@@ -1,12 +1,25 @@
 import React, { useState, useMemo, useRef } from "react";
 import "../app.css"
 import { AgGridReact } from "ag-grid-react";
-import { AllCommunityModule, ModuleRegistry, themeQuartz } from "ag-grid-community";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
+import {
+    AllCommunityModule,
+  ClientSideRowModelModule,
+  ModuleRegistry,
+  themeQuartz,
+  ValidationModule,
+} from "ag-grid-community";
+import { RowNumbersModule } from "ag-grid-enterprise";
+
+
+ModuleRegistry.registerModules([
+  ClientSideRowModelModule,
+  AllCommunityModule,
+  RowNumbersModule,
+  ...(process.env.NODE_ENV !== "production" ? [ValidationModule] : []),
+]);
 import inventoryStock from "../data/inventory";
 
-ModuleRegistry.registerModules([AllCommunityModule]);
+// ModuleRegistry.registerModules([AllCommunityModule]);
 
 const myTheme = themeQuartz.withParams({
   sideBarBackgroundColor: "#08f3",
@@ -98,7 +111,7 @@ const InventoryGrid = () => {
         >
           Export CSV
         </button>
-        <label className="bg-gray-200 px-3 py-1 rounded cursor-pointer hover:bg-gray-300">
+        <label className="bg-indigo-600 text-white px-3 py-1 rounded cursor-pointer hover:bg-indigo-700">
           Import CSV
           <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
         </label>
@@ -113,6 +126,7 @@ const InventoryGrid = () => {
           defaultColDef={defaultColDef}
           animateRows={true}
           sideBar={true}
+          rowNumbers={true}
           theme={theme}
         />
         </div>
