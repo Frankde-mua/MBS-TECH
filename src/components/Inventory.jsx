@@ -139,7 +139,7 @@ const InventoryGrid = () => {
         <div className="bg-green-300 p-4 rounded-2xl shadow-sm">
        
         <header className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-semibold">Top Sold Items</h3>
+        <h3 className="text-2xl font-semibold">🔥 Top Sold Items</h3>
       </header>
       
         </div>
@@ -147,14 +147,14 @@ const InventoryGrid = () => {
       <div className="bg-red-400 p-4 rounded-2xl shadow-sm">
         
       <header className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-semibold">Least Sold Items</h3>
+        <h3 className="text-2xl font-semibold">📉 Least Sold Items</h3>
       </header>
         </div>
 
-      <div className="bg-white p-4 rounded-2xl shadow-sm">
+      <div className="bg-slate-100 p-4 rounded-2xl shadow-sm">
         
       <header className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-semibold">Order Tracking</h3>
+        <h3 className="text-2xl font-semibold"> 📍 Order Tracking</h3>
       </header>
         </div>
       </div>
