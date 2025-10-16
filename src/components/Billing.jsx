@@ -49,6 +49,9 @@ const Billing = () => {
       return sum + (m.price - discountAmount);
     }, 0);
 
+    // Calculate value with the total val
+    const totalVAt = totalBilling * 0.15
+
   // ➕ Add manual service with discount
   const handleAddManual = () => {
     if (!manualService || !manualPrice) return;
@@ -229,7 +232,11 @@ const Billing = () => {
                 })}
 
 
-
+              <tr>
+                <td className="py-2 font-medium">Vat</td>
+                <td></td>
+                <td className="py-2 font-semibold">R{totalVAt.toFixed(2)}</td>
+              </tr>
               <tr>
                 <td className="py-2 font-medium">Total</td>
                 <td></td>
@@ -272,6 +279,9 @@ const Billing = () => {
               </p>
             </div>
 
+            <div>
+            <p><strong>Invoice no:</strong> #00001</p>
+            </div>
             <div className="mt-3 text-xs text-slate-500">
             <p><strong>Name:</strong> {selectedClient.name}</p>
             <p><strong>Surname:</strong> {selectedClient.surname}</p>
@@ -311,6 +321,10 @@ const Billing = () => {
                   );
                 })}
 
+                <tr>
+                  <td className="py-2 font-medium">VAT</td>
+                  <td className="py-2 font-semibold">R{totalVAt.toFixed(2)}</td>
+                </tr>
                 <tr>
                   <td className="py-2 font-medium">Total</td>
                   <td className="py-2 font-semibold">R{totalBilling.toFixed(2)}</td>
