@@ -30,6 +30,30 @@ const InventoryGrid = () => {
     gridRef.current.api.exportDataAsCsv({ fileName: "inventory.csv" });
   };
 
+  // Import CSV
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target.result;
+      const lines = text.split("\n").filter(l => l.trim() !== "");
+      const headers = lines[0].split(",");
+      const data = lines.slice(1).map(line => {
+        const values = line.split(",");
+        let obj = {};
+        headers.forEach((h, idx) => {
+          if (h === "price" || h === "onHand") obj[h] = Number(values[idx]);
+          else obj[h] = values[idx];
+        });
+        return obj;
+      });
+      setRowData(data);
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div style={containerStyle}>
       {/* --- Stock Inventory Table --- */}
@@ -41,6 +65,10 @@ const InventoryGrid = () => {
           >
             Export CSV
           </button>
+           <label className="bg-indigo-600 text-white px-3 py-1 rounded cursor-pointer hover:bg-indigo-700">
+          Import CSV
+          <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
+        </label>
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm">
           <div className="ag-theme-alpine" style={{ height: "300px", width: "100%" }}>
