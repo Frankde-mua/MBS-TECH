@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useRef } from "react";
-import "../app.css"
 import { AgGridReact } from "ag-grid-react";
 import {
   AllCommunityModule,
@@ -9,7 +8,7 @@ import {
   ValidationModule,
 } from "ag-grid-community";
 import { RowNumbersModule } from "ag-grid-enterprise";
-
+import inventoryStock from "../../data/inventory";
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
@@ -17,10 +16,8 @@ ModuleRegistry.registerModules([
   RowNumbersModule,
   ...(process.env.NODE_ENV !== "production" ? [ValidationModule] : []),
 ]);
-import inventoryStock from "../data/inventory";
 
-// ModuleRegistry.registerModules([AllCommunityModule]);
-
+// 🎨 Custom theme setup
 const myTheme = themeQuartz.withParams({
   sideBarBackgroundColor: "#08f3",
   sideButtonBarBackgroundColor: "#fff6",
@@ -34,93 +31,212 @@ const myTheme = themeQuartz.withParams({
   sideButtonSelectedBorder: false,
 });
 
+// 🥇 Top Sales Grid (onHand ≤ 10 AND unitsSold > 30)
 const TopSaleList = () => {
   const gridRef = useRef();
-
   const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
-  const gridStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
 
-  const [rowData, setRowData] = useState(inventoryStock);
+  const [rowData] = useState(() =>
+    inventoryStock.filter((item) => item.onHand <= 10 && item.unitsSold > 30)
+  );
 
   const [columnDefs] = useState([
     { field: "name", minWidth: 150 },
-    {
-      field: "price",
-      valueFormatter: (params) => `R${params.value.toLocaleString()}`
-    },
+    { field: "price", valueFormatter: (p) => `R${p.value.toLocaleString()}` },
     { field: "onHand" },
+    { field: "unitsSold" },
     {
-      field: "Unites Sold",
-      valueFormatter: (params) => new Date(params.value).toLocaleDateString()
-    },
-    {
-      field: "Total Amount",
-      valueFormatter: (params) => new Date(params.value).toLocaleDateString()
+      headerName: "Total Amount",
+      valueGetter: (p) => p.data.price * p.data.unitsSold,
+      valueFormatter: (p) => `R${p.value.toLocaleString()}`,
     },
     { field: "supplier" },
   ]);
 
-  const defaultColDef = useMemo(() => ({
-    editable: true,
-    filter: true,
-    enableRowGroup: true,
-    enablePivot: true,
-    enableValue: true,
-    sortable: true,
-    flex: 1,
-    minWidth: 100,
-  }), []);
+  const defaultColDef = useMemo(
+    () => ({
+      editable: false,
+      filter: true,
+      sortable: true,
+      flex: 1,
+      minWidth: 100,
+    }),
+    []
+  );
 
-  const theme = useMemo(() => myTheme, []);
-
-  // Export Top Sale CSV
   const handleExportTop = () => {
     gridRef.current.api.exportDataAsCsv({ fileName: "topsale.csv" });
   };
 
-    // Export Top Sale CSV
-    const handleExportLeast = () => {
-        gridRef.current.api.exportDataAsCsv({ fileName: "leastsale.csv" });
-      };
-
-   // Export Last Ordered CSV
-  const handleExportLastOrdered = () => {
-    gridRef.current.api.exportDataAsCsv({ fileName: "lastorder.csv" });
-  };
-
-
   return (
     <div style={containerStyle}>
+      <p className="text-xs pb-2">Items that have been sold more than 30 units and have 10 or fewer in stock in the past month.</p>
       <div className="mb-2 flex gap-2">
-        <button
-          onClick={handleExport}
-          className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
+<button
+          onClick={handleExportTop}
+          className="w-19 h-6 text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
         >
           Export CSV
         </button>
       </div>
+
       <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="ag-theme-alpine" style={{ height: `${40 + rowData.length * 15}px`, width: "100%" }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              animateRows={true}
-              sideBar={true}
-              rowNumbers={true}
-              theme={theme}
-              headerHeight={40}   // optional, matches calculation
-              rowHeight={35}      // optional, matches calculation
-            />
-          </div>
+        <div className="ag-theme-quartz" style={{ height: "400px", width: "100%" }}>
+          <AgGridReact
+            ref={gridRef}
+            rowData={rowData}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            animateRows={true}
+            rowNumbers={true}
+            theme={myTheme}
+            headerHeight={25}   // optional, matches calculation
+            rowHeight={25}      // optional, matches calculation
+          />
         </div>
       </div>
     </div>
   );
 };
 
+// 🥈 Least Sales Grid (unitsSold < 10)
+const LeastSales = () => {
+  const gridRef = useRef();
+  const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
 
+  const [rowData] = useState(() =>
+    inventoryStock.filter((item) => item.unitsSold < 10)
+  );
 
-export default renderInventory;
+  const [columnDefs] = useState([
+    { field: "name", minWidth: 150 },
+    { field: "price", valueFormatter: (p) => `R${p.value.toLocaleString()}` },
+    { field: "onHand" },
+    { field: "unitsSold" },
+    {
+      headerName: "Total Amount",
+      valueGetter: (p) => p.data.price * p.data.unitsSold,
+      valueFormatter: (p) => `R${p.value.toLocaleString()}`,
+    },
+    { field: "supplier" },
+  ]);
+
+  const defaultColDef = useMemo(
+    () => ({
+      editable: false,
+      filter: true,
+      sortable: true,
+      flex: 1,
+      minWidth: 100,
+    }),
+    []
+  );
+
+  const handleExportLeast = () => {
+    gridRef.current.api.exportDataAsCsv({ fileName: "leastsale.csv" });
+  };
+
+  return (
+    <div style={containerStyle}>
+      <p className="text-xs pb-2">Items that have been sold less than 10 units and have more than 20 in stock in the past month.</p>
+      <div className="mb-2 flex gap-2">
+        <button
+          onClick={handleExportLeast}
+          className="w-19 h-6 text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
+        >
+          Export CSV
+        </button>
+      </div>
+
+      <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
+        <div className="ag-theme-quartz" style={{ height: "400px", width: "100%" }}>
+          <AgGridReact
+            ref={gridRef}
+            rowData={rowData}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            animateRows={true}
+            rowNumbers={true}
+            theme={myTheme}
+            headerHeight={25}   // optional, matches calculation
+            rowHeight={25}      // optional, matches calculation
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 🚚 Order Tracking Grid
+const OrderTracking = () => {
+  const gridRef = useRef();
+  const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
+  const [rowData] = useState(
+    [...inventoryStock].sort(
+      (a, b) => new Date(b.dateReceived) - new Date(a.dateReceived)
+    )
+  );
+
+  const [columnDefs] = useState([
+    { field: "name", minWidth: 150 },
+    { field: "supplier" },
+    { field: "onHand" },
+    {
+      field: "dateReceived",
+      valueFormatter: (p) => new Date(p.value).toLocaleDateString(),
+    },
+    {
+      field: "lastSale",
+      valueFormatter: (p) => new Date(p.value).toLocaleDateString(),
+    },
+  ]);
+
+  const defaultColDef = useMemo(
+    () => ({
+      editable: false,
+      filter: true,
+      sortable: true,
+      flex: 1,
+      minWidth: 100,
+    }),
+    []
+  );
+
+  const handleExportLastOrdered = () => {
+    gridRef.current.api.exportDataAsCsv({ fileName: "lastorder.csv" });
+  };
+
+  return (
+    <div style={containerStyle}>
+      <p className="text-xs pb-2">Items that were received more than 30 days ago and have not been sold in the past 15 days.</p>
+      <div className="mb-2 flex gap-2">
+        <button
+          onClick={handleExportLastOrdered}
+          className="w-19 h-6 text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
+        >
+          Export CSV
+        </button>
+      </div>
+      <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
+        
+        <div className="ag-theme-quartz" style={{ height: "400px", width: "100%" }}>
+          <AgGridReact
+            ref={gridRef}
+            rowData={rowData}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            animateRows={true}
+            rowNumbers={true}
+            theme={myTheme}
+            headerHeight={25}   // optional, matches calculation
+            rowHeight={25}      // optional, matches calculation
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ✅ Correct Export (Named + Default)
+export { TopSaleList, LeastSales, OrderTracking };
+export default TopSaleList;
