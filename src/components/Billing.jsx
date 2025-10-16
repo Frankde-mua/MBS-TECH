@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ClientList from "./Utlies/ClientList"
 
 const BILLING_SERVICES = [
@@ -16,6 +16,21 @@ const Billing = () => {
   const [manualList, setManualList] = useState([]);
   const [showInvoice, setShowInvoice] = useState(false);
   const [showClients, setShowClients] = useState(false);
+
+  // 🟢 Track selected client
+  const [selectedClient, setSelectedClient] = useState(null);
+  
+  // 🟢 Load selected client from localStorage when modal closes
+    const handleSelectClient = (client) => {
+        setSelectedClient(client);
+        setShowClients(false); // close modal
+        localStorage.setItem("selectedClient", JSON.stringify(client)); // optional
+    };
+
+    useEffect(() => {
+        const client = JSON.parse(localStorage.getItem("selectedClient"));
+        if (client) setSelectedClient(client);
+    }, [showClients]); // recheck when modal closes
 
   const toggleService = (id) => {
     setSelectedServices((prev) =>
@@ -79,42 +94,48 @@ const Billing = () => {
         </div>
       </div>
        
-       {/* Client Search */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm mb-6">
+      {/* Client Search */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm mb-6">
         <h2 className="text-sm font-semibold mb-4">Client Details</h2>
         <div className="flex flex-col sm:flex-row gap-2">
-        <input
+            <input
             type="text"
-            placeholder="Frank"
-            // value={manualService}
-            // onChange={(e) => setManualService(e.target.value)}
+            placeholder="First Name"
+            value={selectedClient?.name || ""}
             className="border rounded-lg p-2 flex-1 text-sm"
             disabled
-          />
-          <input
+            />
+            <input
             type="text"
-            placeholder="Dev"
-            // value={manualService}
-            // onChange={(e) => setManualService(e.target.value)}
+            placeholder="Last Name"
+            value={selectedClient?.surname || ""}
             className="border rounded-lg p-2 flex-1 text-sm"
             disabled
-          />
-          <input
+            />
+            <input
             type="text"
-            placeholder="ZEUS4567"
-            // value={manualService}
-            // onChange={(e) => setManualService(e.target.value)}
+            placeholder="Email"
+            value={selectedClient?.email || ""}
             className="border rounded-lg p-2 flex-1 text-sm"
             disabled
-          />
-          <button
+            />
+            <button
             onClick={() => setShowClients(true)}
             className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-indigo-700"
-          >
-            Search
-          </button>
+            >
+            {selectedClient ? "Change" : "Search"}
+            </button>
         </div>
+
+        {selectedClient && (
+            <div className="mt-3 text-xs text-slate-500">
+            <p><strong>Cell:</strong> {selectedClient.cell}</p>
+            <p><strong>Type:</strong> {selectedClient.type}</p>
+            <p><strong>Address:</strong> {selectedClient.address}</p>
+            </div>
+        )}
         </div>
+
 
       {/* Manual Add */}
       <div className="bg-white p-4 rounded-2xl shadow-sm mb-6">
@@ -303,17 +324,11 @@ const Billing = () => {
 
       {/* 🟦 Client Modal */}
       {showClients && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+        <div id="clientModal" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
     <div className=" bg-white rounded-2xl p-6 shadow-lg text-center w-full max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl transition-all duration-300">
             <h2 className="text-2xl font-bold mb-4">Client List</h2>
             <p className="mb-4">Content for search a client goes here.</p>
-             <ClientList /> 
-            <button
-              onClick={() => setShowClients(false)}
-              className="bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-indigo-700"
-            >
-              Close
-            </button>
+             <ClientList onSelect={handleSelectClient}/>
           </div>
         </div>
       )}

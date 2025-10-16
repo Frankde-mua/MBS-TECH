@@ -31,7 +31,7 @@ const myTheme = themeQuartz.withParams({
   sideButtonSelectedBorder: false,
 });
 
-export default function ClientList() {
+export default function ClientList({ onSelect }) {
   const theme = useMemo(() => myTheme, []);
   const [rowData, setRowData] = useState(CLIENTS);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -54,10 +54,8 @@ export default function ClientList() {
 
   const defaultColDef = { resizable: true, flex: 1 };
 
-  // Handle row selection
-  const onSelectionChanged = () => {
-    const selectedRows = gridRef.current.api.getSelectedRows();
-    setSelectedClient(selectedRows[0] || null);
+  const handleRowClick = (event) => {
+    onSelect(event.data); // send selected client to parent
   };
 
   return (
@@ -82,7 +80,7 @@ export default function ClientList() {
             headerHeight={50}
             rowHeight={35}
             rowSelection="single" // 👈 Enable single-row selection
-            onSelectionChanged={onSelectionChanged} // 👈 Capture selected row
+            onRowClicked={handleRowClick} // 👈 Capture selected row
           />
         </div>
       </div>
@@ -95,11 +93,21 @@ export default function ClientList() {
           <p>{selectedClient.email}</p>
           <p>{selectedClient.cell}</p>
 
-          {/* Example button to "post" data to another page */}
           <button
-            onClick={() =>
-              console.log("Send this client to another page:", selectedClient)
-            }
+            onClick={() => {
+              // 1️⃣ Log or post the client data
+              console.log("Send this client to another page:", selectedClient);
+
+              // 2️⃣ Example: store data in localStorage for use elsewhere
+              localStorage.setItem("selectedClient", JSON.stringify(selectedClient));
+
+              // 3️⃣ Example: close the modal if it has an ID (like #clientModal)
+              const modal = document.getElementById("clientModal");
+              if (modal) modal.style.display = "none"; // or use your modal’s close function
+
+              // 4️⃣ (Optional) Navigate to another page
+              // navigate("/billing"); // if using React Router
+            }}
             className="mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
           >
             Post Data
@@ -107,5 +115,6 @@ export default function ClientList() {
         </div>
       )}
     </div>
+
   );
 }
