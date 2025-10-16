@@ -277,6 +277,7 @@ const Billing = () => {
               <p className="text-sm text-slate-500">
                 {userData.name || "Company email"} — {userData.email || "email@example.com"}
               </p>
+              <p className="text-sm text-slate-500"><strong>Tax Invoice</strong></p>
             </div>
 
             <div>
