@@ -1,60 +1,10 @@
-import React, { useRef, useState, useMemo } from "react";
-import { AgGridReact } from "ag-grid-react";
-import {
-  AllCommunityModule,
-  ClientSideRowModelModule,
-  ModuleRegistry,
-  themeQuartz,
-  ValidationModule,
-  iconSetQuartzLight,
-} from "ag-grid-community";
-import { RowNumbersModule } from "ag-grid-enterprise";
-import { CLIENTS } from "../data/clients";
+import React, { useState } from "react";
+import ClientList from "./Utlies/ClientList"
 
-ModuleRegistry.registerModules([
-  ClientSideRowModelModule,
-  AllCommunityModule,
-  RowNumbersModule,
-  ...(process.env.NODE_ENV !== "production" ? [ValidationModule] : []),
-]);
-
-const myTheme = themeQuartz.withParams({
-  sideBarBackgroundColor: "#08f3",
-  sideButtonBarBackgroundColor: "#fff6",
-  sideButtonBarTopPadding: 20,
-  sideButtonSelectedUnderlineColor: "orange",
-  sideButtonTextColor: "#0009",
-  sideButtonHoverBackgroundColor: "#fffa",
-  sideButtonSelectedBackgroundColor: "#08f1",
-  sideButtonHoverTextColor: "#000c",
-  sideButtonSelectedTextColor: "#000e",
-  sideButtonSelectedBorder: false,
-});
 
 export default function ClientGrid({ setCurrentPage }) {
-  const theme = useMemo(() => myTheme, []);
-  const [rowData, setRowData] = useState(CLIENTS);
-  const gridRef = useRef();
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-
-  const columnDefs = useMemo(
-    () => [
-      { field: "name", headerName: "Name", sortable: true, filter: true },
-      { field: "surname", headerName: "Surname", sortable: true, filter: true },
-      { field: "type", headerName: "Client Type", sortable: true, filter: true },
-      { field: "cell", headerName: "Cell", sortable: true },
-      { field: "email", headerName: "Email", sortable: true },
-      { field: "address", headerName: "Address", sortable: true, flex: 1 },
-      { field: "banking.bank", headerName: "Bank" },
-      { field: "banking.accountNumber", headerName: "Account #" },
-      { field: "banking.branchCode", headerName: "Branch Code" },
-    ],
-    []
-  );
-
-  const defaultColDef = { resizable: true, flex: 1 };
 
   return (
     <div>
@@ -87,36 +37,11 @@ export default function ClientGrid({ setCurrentPage }) {
         >
           💳 Bill Client
         </div>
-
       </div>
 
       {/* ✅ AG Grid Section */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <div
-            className="ag-theme-alpine"
-            style={{
-              width: "100%",
-              // dynamic height: header + rows
-              height: `${50 + rowData.length * 35}px`,
-            }}
-          >
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              animateRows={true}
-              sideBar={true}
-              rowNumbers={true}
-              theme={theme}
-              headerHeight={50}   // optional, matches calculation
-              rowHeight={35}      // optional, matches calculation
-            />
-          </div>
-        </div>
-      </div>
-
+        <ClientList />
+    
       {/* 🟦 Add Client Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
