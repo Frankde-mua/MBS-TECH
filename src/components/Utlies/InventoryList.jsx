@@ -34,7 +34,7 @@ const myTheme = themeQuartz.withParams({
   sideButtonSelectedBorder: false,
 });
 
-const InventoryGrid = () => {
+const TopSaleList = () => {
   const gridRef = useRef();
 
   const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
@@ -50,11 +50,11 @@ const InventoryGrid = () => {
     },
     { field: "onHand" },
     {
-      field: "dateReceived",
+      field: "Unites Sold",
       valueFormatter: (params) => new Date(params.value).toLocaleDateString()
     },
     {
-      field: "lastSale",
+      field: "Total Amount",
       valueFormatter: (params) => new Date(params.value).toLocaleDateString()
     },
     { field: "supplier" },
@@ -73,34 +73,21 @@ const InventoryGrid = () => {
 
   const theme = useMemo(() => myTheme, []);
 
-  // Export CSV
-  const handleExport = () => {
-    gridRef.current.api.exportDataAsCsv({ fileName: "inventory.csv" });
+  // Export Top Sale CSV
+  const handleExportTop = () => {
+    gridRef.current.api.exportDataAsCsv({ fileName: "topsale.csv" });
   };
 
-  // Import CSV
-  const handleImport = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    // Export Top Sale CSV
+    const handleExportLeast = () => {
+        gridRef.current.api.exportDataAsCsv({ fileName: "leastsale.csv" });
+      };
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const text = evt.target.result;
-      const lines = text.split("\n").filter(l => l.trim() !== "");
-      const headers = lines[0].split(",");
-      const data = lines.slice(1).map(line => {
-        const values = line.split(",");
-        let obj = {};
-        headers.forEach((h, idx) => {
-          if (h === "price" || h === "onHand") obj[h] = Number(values[idx]);
-          else obj[h] = values[idx];
-        });
-        return obj;
-      });
-      setRowData(data);
-    };
-    reader.readAsText(file);
+   // Export Last Ordered CSV
+  const handleExportLastOrdered = () => {
+    gridRef.current.api.exportDataAsCsv({ fileName: "lastorder.csv" });
   };
+
 
   return (
     <div style={containerStyle}>
@@ -111,10 +98,6 @@ const InventoryGrid = () => {
         >
           Export CSV
         </button>
-        <label className="bg-indigo-600 text-white px-3 py-1 rounded cursor-pointer hover:bg-indigo-700">
-          Import CSV
-          <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
-        </label>
       </div>
       <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
         <div className="flex items-center justify-between mb-3">
@@ -134,43 +117,10 @@ const InventoryGrid = () => {
           </div>
         </div>
       </div>
-      
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="bg-green-300 p-4 rounded-2xl shadow-sm">
-       
-        <header className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-semibold">Top Sold Items</h3>
-      </header>
-      
-        </div>
-      
-      <div className="bg-red-400 p-4 rounded-2xl shadow-sm">
-        
-      <header className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-semibold">Least Sold Items</h3>
-      </header>
-        </div>
-
-      <div className="bg-white p-4 rounded-2xl shadow-sm">
-        
-      <header className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-semibold">Order Tracking</h3>
-      </header>
-        </div>
-      </div>
-      
     </div>
   );
 };
 
-const renderInventory = () => (
-  <div>
-    <header className="flex items-center justify-between mb-6">
-      <h1 className="text-2xl font-semibold">Inventory</h1>
-    </header>
-    <p className="mb-4">Welcome to your inventory</p>
-    <InventoryGrid />
-  </div>
-);
+
 
 export default renderInventory;

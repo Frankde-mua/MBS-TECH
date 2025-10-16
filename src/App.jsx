@@ -95,7 +95,7 @@ return (
           <span className="font-semibold text-lg text-indigo-600">MBS Tech</span>
           <ul className="hidden md:flex gap-4 text-sm text-slate-600">
             {[
-              ["dashboard", "Reports"],
+              ["dashboard", "Dashboard"],
               ["calendar", "Calendar"],
               ["billing", "Billing"],
               ["inventory", "Inventory"],
