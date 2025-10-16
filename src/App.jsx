@@ -1,6 +1,4 @@
-// import dashboardData from "./data/dashboard_data";
-// const { SAMPLE_EVENTS, METRICS, CHART_DATA } = dashboardData;
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState } from "react";
 import "./app.css";
 import {
   LineChart,
@@ -11,6 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { motion } from "framer-motion";
+import { Menu, X } from "lucide-react";
 import { SAMPLE_EVENTS, METRICS, CHART_DATA } from "./data/dashboard_data";
 import renderInventory from "./components/Inventory";
 import renderProfile from "./components/Profile";
@@ -41,10 +40,6 @@ export default function App() {
   const [events, setEvents] = useState(SAMPLE_EVENTS);
   const [selectedDate, setSelectedDate] = useState(formatISO(new Date()));
 
-  // Just an example filter (not required for Calendar, but used elsewhere)
-  const agendaForSelected = events.filter((e) => e.date === selectedDate);
-
-  // --- Dashboard section ---
   const renderDashboard = () => (
     <div>
       <header className="flex items-center justify-between mb-6">
@@ -90,92 +85,63 @@ export default function App() {
     </div>
   );
 
-  // --- Main Render ---
-  return (
-    <div className="min-h-screen bg-indigo-100">
-      {/* Navbar */}
-      <nav className="bg-white shadow-sm border-b sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-lg text-indigo-600">MBS Tech</span>
-            <ul className="hidden md:flex gap-4 text-sm text-slate-600">
+return (
+  <div className="h-screen flex flex-col overflow-hidden bg-indigo-100">
+    {/* ✅ Fixed Navbar */}
+    <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-30 h-16 flex items-center">
+      <div className="max-w-7xl mx-auto px-4 flex items-center justify-between w-full">
+        {/* Left side */}
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-lg text-indigo-600">MBS Tech</span>
+          <ul className="hidden md:flex gap-4 text-sm text-slate-600">
+            {[
+              ["dashboard", "Reports"],
+              ["calendar", "Calendar"],
+              ["billing", "Billing"],
+              ["inventory", "Inventory"],
+              ["customer", "Customer"],
+              ["profile", "Profile"],
+            ].map(([page, label]) => (
               <li
-                onClick={() => setCurrentPage("dashboard")}
+                key={page}
+                onClick={() => setCurrentPage(page)}
                 className={`cursor-pointer ${
-                  currentPage === "dashboard"
-                    ? "text-indigo-600 font-medium"
-                    : ""
+                  currentPage === page ? "text-indigo-600 font-medium" : ""
                 }`}
               >
-                Reports
+                {label}
               </li>
-              <li
-                onClick={() => setCurrentPage("calendar")}
-                className={`cursor-pointer ${
-                  currentPage === "calendar"
-                    ? "text-indigo-600 font-medium"
-                    : ""
-                }`}
-              >
-                Calendar
-              </li>
-              <li
-                onClick={() => setCurrentPage("billing")}
-                className={`cursor-pointer ${
-                  currentPage === "billing"
-                    ? "text-indigo-600 font-medium"
-                    : ""
-                }`}
-              >
-                Billing
-              </li>
-              <li
-                onClick={() => setCurrentPage("inventory")}
-                className={`cursor-pointer ${
-                  currentPage === "inventory"
-                    ? "text-indigo-600 font-medium"
-                    : ""
-                }`}
-              >
-                Inventory
-              </li>
-              <li
-                onClick={() => setCurrentPage("customer")}
-                className={`cursor-pointer ${
-                  currentPage === "customer"
-                    ? "text-indigo-600 font-medium"
-                    : ""
-                }`}
-              >
-                Customer
-              </li>
-              <li
-                onClick={() => setCurrentPage("profile")}
-                className={`cursor-pointer ${
-                  currentPage === "profile"
-                    ? "text-indigo-600 font-medium"
-                    : ""
-                }`}
-              >
-                Profile
-              </li>
-            </ul>
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="hidden md:block text-sm px-3 py-1.5 border rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-300"
-            />
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
-              F
-            </div>
+            ))}
+          </ul>
+        </div>
+
+        {/* Right side */}
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="hidden md:block text-sm px-3 py-1.5 border rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-300"
+          />
+          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
+            F
           </div>
         </div>
-      </nav>
+      </div>
+    </nav>
 
-      {/* Page Content */}
-      <div className="p-4 max-w-7xl mx-auto">
+    {/* ✅ Scrollable Main Content */}
+    <main
+      className="
+        flex-1
+        overflow-y-auto
+        bg-indigo-100
+        mt-16              /* moves content below navbar height (no overlap) */
+        px-4               /* horizontal padding */
+        pb-6
+        [scrollbar-gutter:stable] /* ✅ prevents right scrollbar gap */
+      "
+    >
+      <div className="max-w-7xl mx-auto w-full">
         {currentPage === "dashboard" && renderDashboard()}
         {currentPage === "calendar" && (
           <Calendar
@@ -193,9 +159,12 @@ export default function App() {
         )}
         {currentPage === "billing" && <Billing />}
         {currentPage === "inventory" && renderInventory()}
-        {currentPage === "customer" && <ClientGrid />}
+        {currentPage === "customer" && (
+          <ClientGrid setCurrentPage={setCurrentPage} />
+        )}
         {currentPage === "profile" && renderProfile()}
       </div>
-    </div>
-  );
+    </main>
+  </div>
+);
 }

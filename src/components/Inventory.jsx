@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from "react";
 import "../app.css"
 import { AgGridReact } from "ag-grid-react";
 import {
-    AllCommunityModule,
+  AllCommunityModule,
   ClientSideRowModelModule,
   ModuleRegistry,
   themeQuartz,
@@ -44,17 +44,17 @@ const InventoryGrid = () => {
 
   const [columnDefs] = useState([
     { field: "name", minWidth: 150 },
-    { 
-      field: "price", 
-      valueFormatter: (params) => `R${params.value.toLocaleString()}` 
+    {
+      field: "price",
+      valueFormatter: (params) => `R${params.value.toLocaleString()}`
     },
     { field: "onHand" },
-    { 
-      field: "dateReceived", 
+    {
+      field: "dateReceived",
       valueFormatter: (params) => new Date(params.value).toLocaleDateString()
     },
-    { 
-      field: "lastSale", 
+    {
+      field: "lastSale",
       valueFormatter: (params) => new Date(params.value).toLocaleDateString()
     },
     { field: "supplier" },
@@ -116,20 +116,22 @@ const InventoryGrid = () => {
           <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
         </label>
       </div>
-          <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
-            <div className="flex items-center justify-between mb-3">
-      <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
-        <AgGridReact
-          ref={gridRef}
-          rowData={rowData}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          animateRows={true}
-          sideBar={true}
-          rowNumbers={true}
-          theme={theme}
-        />
-        </div>
+      <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="ag-theme-alpine" style={{ height: `${40 + rowData.length * 15}px`, width: "100%" }}>
+            <AgGridReact
+              ref={gridRef}
+              rowData={rowData}
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              animateRows={true}
+              sideBar={true}
+              rowNumbers={true}
+              theme={theme}
+              headerHeight={40}   // optional, matches calculation
+              rowHeight={35}      // optional, matches calculation
+            />
+          </div>
         </div>
       </div>
     </div>

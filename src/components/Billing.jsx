@@ -41,12 +41,12 @@ const Billing = () => {
     <div>
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Billing</h1>
-        <button
+        {/* <button
           onClick={() => setShowInvoice(true)}
           className="bg-indigo-600 text-white text-sm px-4 py-2 rounded-lg shadow hover:bg-indigo-700"
         >
           Generate Invoice
-        </button>
+        </button> */}
       </header>
 
         {/* Quick Services */}
@@ -133,6 +133,12 @@ const Billing = () => {
               </tbody>
             </table>
           )}
+          <button
+          onClick={() => setShowInvoice(true)}
+          className="bg-indigo-600 text-white text-sm px-4 py-2 rounded-lg shadow hover:bg-indigo-700"
+        >
+          Generate Invoice
+        </button>
         </div>
 
         {/* Invoice Modal */}
