@@ -268,10 +268,18 @@ const Billing = () => {
                 {userData.company || "Your Company"}
               </h2>
               <p className="text-sm text-slate-500">
-                {userData.name || "Client"} — {userData.email || "email@example.com"}
+                {userData.name || "Company email"} — {userData.email || "email@example.com"}
               </p>
             </div>
 
+            <div className="mt-3 text-xs text-slate-500">
+            <p><strong>Name:</strong> {selectedClient.name}</p>
+            <p><strong>Surname:</strong> {selectedClient.surname}</p>
+            <p><strong>Cell:</strong> {selectedClient.cell}</p>
+            <p><strong>Type:</strong> {selectedClient.type}</p>
+            <p><strong>Address:</strong> {selectedClient.address}</p>
+            </div>
+            <br />
             <table className="w-full text-sm border-t">
               <thead>
                 <tr className="text-left border-b">
