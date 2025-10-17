@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import Loader from "../Utlies/Loader";
 
 const Login = ({ onLogin }) => {
   const [form, setForm] = useState({
-  name: "Frank Dev",
-  company: "MBS Tech",
-  email: "frank@mbstech.co.za",
-});
+    name: "Frank Dev",
+    company: "MBS Tech",
+    email: "frank@mbstech.co.za",
+  });
+
+  const [loading, setLoading] = useState(false); // ✅ added
 
   // ✅ Default allowed user
   const defaultUser = {
@@ -23,15 +26,22 @@ const Login = ({ onLogin }) => {
       form.company === defaultUser.company &&
       form.email === defaultUser.email
     ) {
-      localStorage.setItem("user", JSON.stringify(defaultUser));
-      onLogin(defaultUser);
+      setLoading(true); // ✅ show loader
+      setTimeout(() => {
+        localStorage.setItem("user", JSON.stringify(defaultUser));
+        onLogin(defaultUser);
+        setLoading(false); // ✅ hide loader after 1s
+      }, 1000);
     } else {
       alert("Invalid login details. Please try again.");
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-indigo-100">
+    <div className="flex items-center justify-center h-screen bg-indigo-100 relative">
+      {/* ✅ Loader overlay */}
+      <Loader show={loading} label="Nex in..." />
+
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-2xl shadow-lg w-[350px]"
@@ -72,7 +82,7 @@ const Login = ({ onLogin }) => {
 
         {/* Optional hint */}
         <p className="text-xs text-center mt-4 text-slate-500">
-          Default login: Dev / MBS Tech / frank@mbstech.co.za
+          Default hint login: Dev / MBS Tech / frank@mbstech.co.za
         </p>
       </form>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { TopSaleList, LeastSales, OrderTracking } from "./Utlies/InventoryList";
+import StockForm from "./Utlies/StockForm";
 import inventoryStock from "../data/inventory";
 
 const InventoryGrid = () => {
@@ -100,19 +101,22 @@ const InventoryGrid = () => {
 
       {/* 🟦 Add Client Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-96 shadow-lg text-center">
-            <h2 className="text-2xl font-bold mb-4">Add Stock</h2>
-            <p className="mb-4">Form or content for adding a stock and sales.</p>
-            <button
-              onClick={() => setShowAddModal(false)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-lg overflow-y-auto p-6 relative">
+      <h2 className="text-2xl font-bold mb-4 text-center">Add Stock</h2>
+      <StockForm />
+      <div className="mt-6 flex justify-center">
+        <button
+          onClick={() => setShowAddModal(false)}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* --- Three Cards --- */}
       <div className="grid grid-cols-3 gap-4 mb-4">
