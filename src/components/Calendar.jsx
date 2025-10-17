@@ -49,9 +49,15 @@ export default function Calendar({
 
   return (
     <div>
+
       <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Diary</h1>
+        <div>
+          <h1 className="text-2xl font-semibold">Diary</h1>
+          <p className="text-sm text-slate-600">Keep track of agendas and orders.</p>
+        </div>
       </header>
+
+      {/* --- Main Grid --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <aside className="lg:col-span-2">
           <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
@@ -89,11 +95,10 @@ export default function Calendar({
                   <div
                     key={iso}
                     onClick={() => setSelectedDate(iso)}
-                    className={`p-2 rounded-lg cursor-pointer min-h-[64px] border ${
-                      isSelected
+                    className={`p-2 rounded-lg cursor-pointer min-h-[64px] border ${isSelected
                         ? "border-indigo-300 bg-indigo-50"
                         : "border-transparent"
-                    } ${inMonth ? "" : "text-slate-400 opacity-60"}`}
+                      } ${inMonth ? "" : "text-slate-400 opacity-60"}`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="text-xs font-medium">{d.getDate()}</div>
@@ -168,17 +173,17 @@ export default function Calendar({
           )}
         </section>
         <br />
-        
+
         <aside className="lg:col-span-3">
           <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
             <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-semibold">Completed appointments today</div>
-           
-        </div>
-        <p>
-                0.
+              <div className="text-sm font-semibold">Completed appointments today</div>
+
+            </div>
+            <p>
+              0.
             </p>
-        </div>
+          </div>
         </aside>
       </div>
     </div>

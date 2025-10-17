@@ -1,79 +1,32 @@
 import React, { useState, useMemo, useRef } from "react";
-import "../app.css"
 import { AgGridReact } from "ag-grid-react";
-import {
-  AllCommunityModule,
-  ClientSideRowModelModule,
-  ModuleRegistry,
-  themeQuartz,
-  ValidationModule,
-} from "ag-grid-community";
-import { RowNumbersModule } from "ag-grid-enterprise";
-
-
-ModuleRegistry.registerModules([
-  ClientSideRowModelModule,
-  AllCommunityModule,
-  RowNumbersModule,
-  ...(process.env.NODE_ENV !== "production" ? [ValidationModule] : []),
-]);
+import { TopSaleList, LeastSales, OrderTracking } from "./Utlies/InventoryList";
 import inventoryStock from "../data/inventory";
-
-// ModuleRegistry.registerModules([AllCommunityModule]);
-
-const myTheme = themeQuartz.withParams({
-  sideBarBackgroundColor: "#08f3",
-  sideButtonBarBackgroundColor: "#fff6",
-  sideButtonBarTopPadding: 20,
-  sideButtonSelectedUnderlineColor: "orange",
-  sideButtonTextColor: "#0009",
-  sideButtonHoverBackgroundColor: "#fffa",
-  sideButtonSelectedBackgroundColor: "#08f1",
-  sideButtonHoverTextColor: "#000c",
-  sideButtonSelectedTextColor: "#000e",
-  sideButtonSelectedBorder: false,
-});
 
 const InventoryGrid = () => {
   const gridRef = useRef();
+  const [rowData, setRowData] = useState(inventoryStock);
+  const [modalOpen, setModalOpen] = useState(null); // "top" | "least" | "order" | null
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
-  const gridStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
-
-  const [rowData, setRowData] = useState(inventoryStock);
-
-  const [columnDefs] = useState([
-    { field: "name", minWidth: 150 },
-    {
-      field: "price",
-      valueFormatter: (params) => `R${params.value.toLocaleString()}`
-    },
-    { field: "onHand" },
-    {
-      field: "dateReceived",
-      valueFormatter: (params) => new Date(params.value).toLocaleDateString()
-    },
-    {
-      field: "lastSale",
-      valueFormatter: (params) => new Date(params.value).toLocaleDateString()
-    },
-    { field: "supplier" },
-  ]);
-
   const defaultColDef = useMemo(() => ({
     editable: true,
     filter: true,
-    enableRowGroup: true,
-    enablePivot: true,
-    enableValue: true,
     sortable: true,
     flex: 1,
     minWidth: 100,
   }), []);
 
-  const theme = useMemo(() => myTheme, []);
+  const columnDefs = [
+    { field: "name", minWidth: 150 },
+    { field: "price", valueFormatter: (p) => `R${p.value.toLocaleString()}` },
+    { field: "onHand" },
+    { field: "dateReceived", valueFormatter: (p) => new Date(p.value).toLocaleDateString() },
+    { field: "lastSale", valueFormatter: (p) => new Date(p.value).toLocaleDateString() },
+    { field: "supplier" },
+  ];
 
-  // Export CSV
   const handleExport = () => {
     gridRef.current.api.exportDataAsCsv({ fileName: "inventory.csv" });
   };
@@ -104,36 +57,116 @@ const InventoryGrid = () => {
 
   return (
     <div style={containerStyle}>
-      <div className="mb-2 flex gap-2">
+      {/* --- Stock Inventory Table --- */}
+      <div className="mb-4">
+        <div className="mb-2 flex gap-2">
+          <button
+            onClick={handleExport}
+            className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
+          >
+            Export CSV
+          </button>
+          <label className="bg-indigo-600 text-white px-3 py-1 rounded cursor-pointer hover:bg-indigo-700">
+            Import CSV
+            <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
+          </label>
         <button
-          onClick={handleExport}
-          className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
+          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+          onClick={() => setShowAddModal(true)}
         >
-          Export CSV
+          Add
         </button>
-        <label className="bg-indigo-600 text-white px-3 py-1 rounded cursor-pointer hover:bg-indigo-700">
-          Import CSV
-          <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
-        </label>
-      </div>
-      <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="ag-theme-alpine" style={{ height: `${40 + rowData.length * 15}px`, width: "100%" }}>
+        <button
+          className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700"
+        >
+          Print
+        </button>
+        </div>
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
+          <div className="ag-theme-alpine" style={{ height: "300px", width: "100%" }}>
             <AgGridReact
               ref={gridRef}
               rowData={rowData}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               animateRows={true}
-              sideBar={true}
               rowNumbers={true}
-              theme={theme}
-              headerHeight={40}   // optional, matches calculation
-              rowHeight={35}      // optional, matches calculation
+              headerHeight={35}
+              rowHeight={30}
             />
           </div>
         </div>
       </div>
+
+      {/* 🟦 Add Client Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-96 shadow-lg text-center">
+            <h2 className="text-2xl font-bold mb-4">Add Stock</h2>
+            <p className="mb-4">Form or content for adding a stock and sales.</p>
+            <button
+              onClick={() => setShowAddModal(false)}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Three Cards --- */}
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div
+          className="bg-green-300 p-4 rounded-2xl shadow-sm cursor-pointer hover:scale-105 transition-transform duration-200"
+          onClick={() => setModalOpen("top")}
+        >
+          <h4 className="text-2xl font-semibold mb-2">🔥 Top Sold Items</h4>
+          <TopSaleList />
+        </div>
+
+        <div
+          className="bg-red-400 p-4 rounded-2xl shadow-sm cursor-pointer hover:scale-105 transition-transform duration-200"
+          onClick={() => setModalOpen("least")}
+        >
+          <h4 className="text-2xl font-semibold mb-2">🥈 Least Sold Items</h4>
+          <LeastSales />
+        </div>
+
+        <div
+          className="bg-slate-100 p-4 rounded-2xl shadow-sm cursor-pointer hover:scale-105 transition-transform duration-200"
+          onClick={() => setModalOpen("order")}
+        >
+          <h4 className="text-2xl font-semibold mb-2">🚚 Order Tracking</h4>
+          <OrderTracking />
+        </div>
+      </div>
+
+      {/* --- Modal Overlay --- */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-lg p-6 w-11/12 h-[90vh] overflow-auto animate-fadeIn relative">
+            {/* Close button */}
+            <button
+              onClick={() => setModalOpen(null)}
+              className="absolute top-4 right-6 text-gray-600 text-lg hover:text-black"
+            >
+              ✖
+            </button>
+
+            {/* Dynamic header */}
+            <h2 className="text-2xl font-semibold mb-4">
+              {modalOpen === "top" && "🔥 Top Sold Items"}
+              {modalOpen === "least" && "🥈 Least Sold Items"}
+              {modalOpen === "order" && "🚚 Order Tracking"}
+            </h2>
+
+            {/* Modal content */}
+            {modalOpen === "top" && <TopSaleList />}
+            {modalOpen === "least" && <LeastSales />}
+            {modalOpen === "order" && <OrderTracking />}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -141,9 +174,11 @@ const InventoryGrid = () => {
 const renderInventory = () => (
   <div>
     <header className="flex items-center justify-between mb-6">
-      <h1 className="text-2xl font-semibold">Inventory</h1>
-    </header>
-    <p className="mb-4">Welcome to your inventory</p>
+        <div>
+          <h1 className="text-2xl font-semibold">Inventory</h1>
+          <p className="text-sm text-slate-600">Goods control and management.</p>
+        </div>
+      </header>
     <InventoryGrid />
   </div>
 );

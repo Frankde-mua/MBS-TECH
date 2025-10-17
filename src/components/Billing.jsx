@@ -73,9 +73,11 @@ const Billing = () => {
   return (
     <div>
       <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Billing</h1>
-      </header>
-
+      <div>
+          <h1 className="text-2xl font-semibold">Billing</h1>
+          <p className="text-sm text-slate-600">Create some invoices.</p>
+        </div>
+        </header>
       {/* Quick Services */}
       <div className="bg-white p-4 rounded-2xl shadow-sm mb-6">
         <h2 className="text-sm font-semibold mb-4">Quick Service Selection</h2>
@@ -277,6 +279,7 @@ const Billing = () => {
               <p className="text-sm text-slate-500">
                 {userData.name || "Company email"} — {userData.email || "email@example.com"}
               </p>
+              <p className="text-sm text-slate-500"><strong>Tax Invoice</strong></p>
             </div>
 
             <div>

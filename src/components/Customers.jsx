@@ -8,10 +8,14 @@ export default function ClientGrid({ setCurrentPage }) {
 
   return (
     <div>
+      {/* --- Header Section --- */}
       <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Clientel</h1>
+        <div>
+          <h1 className="text-2xl font-semibold">Clientel</h1>
+          <p className="text-sm text-slate-600">Manage your clientel.</p>
+        </div>
       </header>
-
+      
       {/* ⚡ 3 Cards Section */}
       <div className="flex flex-wrap justify-center gap-6 mb-8">
         {/* Add Client Card */}
