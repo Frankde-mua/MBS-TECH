@@ -72,7 +72,7 @@ const TopSaleList = () => {
     <div style={containerStyle}>
       <p className="text-xs pb-2">Items that have been sold more than 30 units and have 10 or fewer in stock in the past month.</p>
       <div className="mb-2 flex gap-2">
-<button
+        <button
           onClick={handleExportTop}
           className="w-19 h-6 text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
         >
@@ -218,7 +218,7 @@ const OrderTracking = () => {
         </button>
       </div>
       <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
-        
+
         <div className="ag-theme-quartz" style={{ height: "400px", width: "100%" }}>
           <AgGridReact
             ref={gridRef}
@@ -237,6 +237,5 @@ const OrderTracking = () => {
   );
 };
 
-// ✅ Correct Export (Named + Default)
 export { TopSaleList, LeastSales, OrderTracking };
 export default TopSaleList;

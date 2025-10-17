@@ -16,6 +16,7 @@ import renderProfile from "./components/Profile";
 import Billing from "./components/Billing";
 import Calendar from "./components/Calendar";
 import ClientGrid from "./components/Customers";
+import Expenditure from "./components/Expenditure";
 
 // --- Utility functions ---
 function startOfMonth(date) {
@@ -45,7 +46,7 @@ export default function App() {
       <header className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="text-sm text-slate-600">Overview of key metrics</p>
+          <p className="text-sm text-slate-600">Overview of key metrics.</p>
         </div>
       </header>
       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -98,6 +99,7 @@ return (
               ["dashboard", "Dashboard"],
               ["calendar", "Calendar"],
               ["billing", "Billing"],
+              ["expense", "Expense"],
               ["inventory", "Inventory"],
               ["customer", "Customer"],
               ["profile", "Profile"],
@@ -158,6 +160,7 @@ return (
           />
         )}
         {currentPage === "billing" && <Billing />}
+        {currentPage === "expense" && <Expenditure />}
         {currentPage === "inventory" && renderInventory()}
         {currentPage === "customer" && (
           <ClientGrid setCurrentPage={setCurrentPage} />

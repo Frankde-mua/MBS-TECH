@@ -7,6 +7,7 @@ const InventoryGrid = () => {
   const gridRef = useRef();
   const [rowData, setRowData] = useState(inventoryStock);
   const [modalOpen, setModalOpen] = useState(null); // "top" | "least" | "order" | null
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
   const defaultColDef = useMemo(() => ({
@@ -65,10 +66,21 @@ const InventoryGrid = () => {
           >
             Export CSV
           </button>
-           <label className="bg-indigo-600 text-white px-3 py-1 rounded cursor-pointer hover:bg-indigo-700">
-          Import CSV
-          <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
-        </label>
+          <label className="bg-indigo-600 text-white px-3 py-1 rounded cursor-pointer hover:bg-indigo-700">
+            Import CSV
+            <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
+          </label>
+        <button
+          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+          onClick={() => setShowAddModal(true)}
+        >
+          Add
+        </button>
+        <button
+          className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700"
+        >
+          Print
+        </button>
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm">
           <div className="ag-theme-alpine" style={{ height: "300px", width: "100%" }}>
@@ -85,6 +97,22 @@ const InventoryGrid = () => {
           </div>
         </div>
       </div>
+
+      {/* 🟦 Add Client Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-96 shadow-lg text-center">
+            <h2 className="text-2xl font-bold mb-4">Add Stock</h2>
+            <p className="mb-4">Form or content for adding a stock and sales.</p>
+            <button
+              onClick={() => setShowAddModal(false)}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* --- Three Cards --- */}
       <div className="grid grid-cols-3 gap-4 mb-4">
@@ -117,12 +145,22 @@ const InventoryGrid = () => {
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-lg p-6 w-11/12 h-[90vh] overflow-auto animate-fadeIn relative">
+            {/* Close button */}
             <button
               onClick={() => setModalOpen(null)}
               className="absolute top-4 right-6 text-gray-600 text-lg hover:text-black"
             >
               ✖
             </button>
+
+            {/* Dynamic header */}
+            <h2 className="text-2xl font-semibold mb-4">
+              {modalOpen === "top" && "🔥 Top Sold Items"}
+              {modalOpen === "least" && "🥈 Least Sold Items"}
+              {modalOpen === "order" && "🚚 Order Tracking"}
+            </h2>
+
+            {/* Modal content */}
             {modalOpen === "top" && <TopSaleList />}
             {modalOpen === "least" && <LeastSales />}
             {modalOpen === "order" && <OrderTracking />}
@@ -136,9 +174,11 @@ const InventoryGrid = () => {
 const renderInventory = () => (
   <div>
     <header className="flex items-center justify-between mb-6">
-      <h1 className="text-2xl font-semibold">Inventory</h1>
-    </header>
-    <p className="mb-4">Welcome to your inventory</p>
+        <div>
+          <h1 className="text-2xl font-semibold">Inventory</h1>
+          <p className="text-sm text-slate-600">Goods control and management.</p>
+        </div>
+      </header>
     <InventoryGrid />
   </div>
 );

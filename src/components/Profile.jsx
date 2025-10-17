@@ -2,8 +2,15 @@ import React from "react";
 
 const renderProfile = () => (
     <div>
+      {/* Header */}
+      <header className="mb-4">
+        <h1 className="text-2xl font-semibold">Profile</h1>
+        <p className="text-sm text-slate-600">Manage your profile information.</p>
+      </header>
+
+      {/* Profile Form */}
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Profile</h1>
+        <h1 className="text-2xl font-bold mb-4">User</h1>
         <div className="bg-white p-4 rounded shadow space-y-2">
           <div>
             <label className="text-sm font-medium">Name</label>
