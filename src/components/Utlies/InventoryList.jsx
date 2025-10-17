@@ -171,23 +171,34 @@ const LeastSales = () => {
 const OrderTracking = () => {
   const gridRef = useRef();
   const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
+
+  // Filter only ordered and cancelled items
   const [rowData] = useState(
-    [...inventoryStock].sort(
-      (a, b) => new Date(b.dateReceived) - new Date(a.dateReceived)
+    inventoryStock.filter(
+      (item) => (item.qtyOrdered && item.qtyOrdered > 0) || item.status === "Cancelled"
     )
   );
 
   const [columnDefs] = useState([
-    { field: "name", minWidth: 150 },
-    { field: "supplier" },
-    { field: "onHand" },
+    { field: "name", headerName: "Item Name", minWidth: 180 },
+    { field: "qtyOrdered", headerName: "Qty Ordered", width: 120 },
     {
-      field: "dateReceived",
-      valueFormatter: (p) => new Date(p.value).toLocaleDateString(),
-    },
-    {
-      field: "lastSale",
-      valueFormatter: (p) => new Date(p.value).toLocaleDateString(),
+      field: "status",
+      headerName: "Order Status",
+      cellStyle: (params) => {
+        switch (params.value) {
+          case "Received":
+            return { color: "green", fontWeight: "600" };
+          case "Pending":
+            return { color: "orange", fontWeight: "600" };
+          case "Returned":
+            return { color: "red", fontWeight: "600" };
+          case "Cancelled":
+            return { color: "gray", fontWeight: "600" };
+          default:
+            return {};
+        }
+      },
     },
   ]);
 
@@ -203,12 +214,15 @@ const OrderTracking = () => {
   );
 
   const handleExportLastOrdered = () => {
-    gridRef.current.api.exportDataAsCsv({ fileName: "lastorder.csv" });
+    gridRef.current.api.exportDataAsCsv({ fileName: "order_tracking.csv" });
   };
 
   return (
     <div style={containerStyle}>
-      <p className="text-xs pb-2">Items that were received more than 30 days ago and have not been sold in the past 15 days.</p>
+      <p className="text-xs pb-2">
+        Showing all ordered and cancelled items, including their quantities and status.
+      </p>
+
       <div className="mb-2 flex gap-2">
         <button
           onClick={handleExportLastOrdered}
@@ -217,8 +231,8 @@ const OrderTracking = () => {
           Export CSV
         </button>
       </div>
-      <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
 
+      <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
         <div className="ag-theme-quartz" style={{ height: "400px", width: "100%" }}>
           <AgGridReact
             ref={gridRef}
@@ -228,14 +242,15 @@ const OrderTracking = () => {
             animateRows={true}
             rowNumbers={true}
             theme={myTheme}
-            headerHeight={25}   // optional, matches calculation
-            rowHeight={25}      // optional, matches calculation
+            headerHeight={25}
+            rowHeight={25}
           />
         </div>
       </div>
     </div>
   );
 };
+
 
 export { TopSaleList, LeastSales, OrderTracking };
 export default TopSaleList;
