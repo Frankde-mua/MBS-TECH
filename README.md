@@ -1,9 +1,10 @@
-# MBS Dashboard & Billing Solution
+# NexSys – “Next System” for smart business automation
 
 Quick starter React project (Vite) with a single-page dashboard that includes:
 - Reports page (charts & metrics)
 - Calendar page (month view + agenda)
 - Billing page (quick service selector and summary)
+- Expense - Keep track of all your expenses
 - Inventory page helps keep track of your inventory - export or import data
 - Customer page help manage cliently data
 

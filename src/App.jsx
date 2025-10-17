@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./app.css";
 import {
   LineChart,
@@ -11,14 +11,14 @@ import {
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { SAMPLE_EVENTS, METRICS, CHART_DATA } from "./data/dashboard_data";
-import renderInventory from "./components/Inventory";
-import renderProfile from "./components/Profile";
+import Login from "./components/Auth/Login";
 import Billing from "./components/Billing";
 import Calendar from "./components/Calendar";
 import ClientGrid from "./components/Customers";
+import renderInventory from "./components/Inventory";
+import Profile from "./components/Profile";
 import Expenditure from "./components/Expenditure";
 
-// --- Utility functions ---
 function startOfMonth(date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
@@ -34,140 +34,166 @@ function formatISO(date) {
   return date.toISOString().slice(0, 10);
 }
 
-// --- Main App ---
 export default function App() {
+  const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState("dashboard");
-  const [current, setCurrent] = useState(() => new Date());
   const [events, setEvents] = useState(SAMPLE_EVENTS);
   const [selectedDate, setSelectedDate] = useState(formatISO(new Date()));
+  const [current, setCurrent] = useState(() => new Date());
+
+  // Restore login from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("user");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setUser(parsed);
+
+      // ⏰ Setup auto-logout timer (60 minutes)
+      const logoutTimer = setTimeout(() => {
+        localStorage.removeItem("user");
+        setUser(null);
+        alert("Session expired. You’ve been logged out automatically.");
+      }, 60 * 60 * 1000); // 60 minutes
+
+      // 🧹 Clear timer if user logs out manually or component unmounts
+      return () => clearTimeout(logoutTimer);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    setCurrentPage("dashboard"); // ✅ Redirect to Dashboard
+  };
+
+  if (!user) {
+    return <Login onLogin={setUser} />;
+  }
 
   const renderDashboard = () => (
-    <div>
-      <header className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="text-sm text-slate-600">Overview of key metrics.</p>
+      <div>
+        <header className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-semibold">Dashboard</h1>
+            <p className="text-sm text-slate-600">Overview of key metrics.</p>
+          </div>
+        </header>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {METRICS.map((m) => (
+            <motion.div
+              key={m.id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white p-4 rounded-2xl shadow-sm"
+            >
+              <div className="text-sm text-slate-500">{m.label}</div>
+              <div className="text-2xl font-medium mt-2">{m.value}</div>
+            </motion.div>
+          ))}
         </div>
-      </header>
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        {METRICS.map((m) => (
-          <motion.div
-            key={m.id}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-4 rounded-2xl shadow-sm"
-          >
-            <div className="text-sm text-slate-500">{m.label}</div>
-            <div className="text-2xl font-medium mt-2">{m.value}</div>
-          </motion.div>
-        ))}
-      </div>
-      <div className="bg-white p-4 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold">Visitors (last 7 days)</h2>
-        </div>
-        <div style={{ height: 220 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={CHART_DATA}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="visitors"
-                stroke="#6366f1"
-                strokeWidth={2}
-                dot={{ r: 3 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  );
-
-return (
-  <div className="h-screen flex flex-col overflow-hidden bg-indigo-100">
-    {/* ✅ Fixed Navbar */}
-    <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-30 h-16 flex items-center">
-      <div className="max-w-7xl mx-auto px-4 flex items-center justify-between w-full">
-        {/* Left side */}
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-lg text-indigo-600">MBS Tech</span>
-          <ul className="hidden md:flex gap-4 text-sm text-slate-600">
-            {[
-              ["dashboard", "Dashboard"],
-              ["calendar", "Calendar"],
-              ["billing", "Billing"],
-              ["expense", "Expense"],
-              ["inventory", "Inventory"],
-              ["customer", "Customer"],
-              ["profile", "Profile"],
-            ].map(([page, label]) => (
-              <li
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`cursor-pointer ${
-                  currentPage === page ? "text-indigo-600 font-medium" : ""
-                }`}
-              >
-                {label}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Right side */}
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Search..."
-            className="hidden md:block text-sm px-3 py-1.5 border rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-300"
-          />
-          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
-            F
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold">Visitors (last 7 days)</h2>
+          </div>
+          <div style={{ height: 220 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={CHART_DATA}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="visitors"
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
-    </nav>
+    );
 
-    {/* ✅ Scrollable Main Content */}
-    <main
-      className="
-        flex-1
-        overflow-y-auto
-        bg-indigo-100
-        mt-16              /* moves content below navbar height (no overlap) */
-        px-4               /* horizontal padding */
-        pb-6
-        [scrollbar-gutter:stable] /* ✅ prevents right scrollbar gap */
-      "
-    >
-      <div className="max-w-7xl mx-auto w-full">
-        {currentPage === "dashboard" && renderDashboard()}
-        {currentPage === "calendar" && (
-          <Calendar
-            current={current}
-            setCurrent={setCurrent}
-            events={events}
-            setEvents={setEvents}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            startOfMonth={startOfMonth}
-            endOfMonth={endOfMonth}
-            addDays={addDays}
-            formatISO={formatISO}
-          />
-        )}
-        {currentPage === "billing" && <Billing />}
-        {currentPage === "expense" && <Expenditure />}
-        {currentPage === "inventory" && renderInventory()}
-        {currentPage === "customer" && (
-          <ClientGrid setCurrentPage={setCurrentPage} />
-        )}
-        {currentPage === "profile" && renderProfile()}
+  return (
+    <div className="h-screen flex flex-col overflow-hidden bg-indigo-100">
+      {/* ✅ Navbar */}
+      <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-30 h-16 flex items-center">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between w-full">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold text-lg text-indigo-600">NexSys</span>
+            <ul className="hidden md:flex gap-4 text-sm text-slate-600">
+              {[
+                ["dashboard", "Dashboard"],
+                ["calendar", "Calendar"],
+                ["billing", "Billing"],
+                ["inventory", "Inventory"],
+                ["expense", "Expense"],
+                ["customer", "Customer"],
+                ["profile", "Profile"],
+              ].map(([page, label]) => (
+                <li
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`cursor-pointer ${
+                    currentPage === page ? "text-indigo-600 font-medium" : ""
+                  }`}
+                >
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-600">{user.name}</span>
+            <button
+              onClick={handleLogout}
+              className="text-xs text-red-500 border border-red-400 px-2 py-1 rounded hover:bg-red-50"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ✅ Main Content */}
+      <main className="flex-1 overflow-y-auto bg-indigo-100 mt-16 px-4 pb-6">
+        <div className="max-w-7xl mx-auto w-full">
+          {currentPage === "dashboard" && renderDashboard()}
+          {currentPage === "calendar" && (
+                    <Calendar
+                      current={current}
+                      setCurrent={setCurrent}
+                      events={events}
+                      setEvents={setEvents}
+                      selectedDate={selectedDate}
+                      setSelectedDate={setSelectedDate}
+                      startOfMonth={startOfMonth}
+                      endOfMonth={endOfMonth}
+                      addDays={addDays}
+                      formatISO={formatISO}
+                    />
+                  )}
+          {currentPage === "billing" && <Billing />}
+          {currentPage === "inventory" && renderInventory()}
+          {currentPage === "expense" && <Expenditure />}
+          {currentPage === "customer" && <ClientGrid setCurrentPage={setCurrentPage} />}
+          {currentPage === "profile" && <Profile user={user} />}
+        </div>
+      </main>
+
+      {/* ✅ Footer */}
+    <footer className="bg-gray-100 border-t py-4 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
+        <p>© {new Date().getFullYear()} NexSys. All rights reserved.</p>
+        <div className="flex gap-4 mt-2 md:mt-0">
+          <a href="#" className="hover:text-indigo-600">Privacy Policy</a>
+          <a href="#" className="hover:text-indigo-600">Terms</a>
+          <a href="#" className="hover:text-indigo-600">Support</a>
+        </div>
       </div>
-    </main>
-  </div>
-);
+    </footer>
+    </div>
+  );
 }
