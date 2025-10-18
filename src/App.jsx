@@ -44,6 +44,8 @@ export default function App() {
   const [current, setCurrent] = useState(() => new Date());
   const [loading, setLoading] = useState(false);
   const [loaderLabel, setLoaderLabel] = useState("NexSys");
+  const [mobileOpen, setMobileOpen] = useState(false);
+
 
   // Restore login from localStorage
   useEffect(() => {
@@ -136,18 +138,74 @@ export default function App() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-indigo-100">
       {/* ✅ Navbar */}
+            {/* ✅ Navbar */}
       <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-30 h-16 flex items-center">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between w-full">
+          {/* Left: Logo */}
           <div className="flex items-center gap-3">
             <div className="flex items-center h-24 ml-2">
               <img
                 src={NexSysLogo}
                 alt="NexSys"
                 className="h-24 w-auto object-contain -mt-2"
-                style={{ marginLeft: '-2.5rem' }}
+                style={{ marginLeft: "-2.5rem" }}
               />
             </div>
-            <ul className="hidden md:flex gap-4 text-sm text-slate-600" style={{ marginLeft: '-2.5rem' }}>
+          </div>
+
+          {/* Desktop Menu */}
+          <ul
+            className="hidden md:flex gap-4 text-sm text-slate-600"
+            style={{ marginLeft: "-2.5rem" }}
+          >
+            {[
+              ["dashboard", "Dashboard"],
+              ["calendar", "Calendar"],
+              ["billing", "Billing"],
+              ["inventory", "Inventory"],
+              ["expense", "Expense"],
+              ["customer", "Customer"],
+              ["profile", "Profile"],
+            ].map(([page, label]) => (
+              <li
+                key={page}
+                onClick={() => {
+                  setLoading(true);
+                  setCurrentPage(page);
+                  setTimeout(() => setLoading(false), 3000);
+                }}
+                className={`cursor-pointer ${
+                  currentPage === page ? "text-indigo-600 font-medium" : ""
+                }`}
+              >
+                {label}
+              </li>
+            ))}
+          </ul>
+
+          {/* Right: User & Logout */}
+          <div className="hidden md:flex items-center gap-3">
+            <span className="text-sm text-slate-600">{user.name}</span>
+            <button
+              onClick={handleLogout}
+              className="text-xs text-red-500 border border-red-400 px-2 py-1 rounded hover:bg-red-50"
+            >
+              Logout
+            </button>
+          </div>
+
+          {/* Mobile Hamburger Button */}
+          <div className="md:hidden flex items-center">
+            <button onClick={() => setMobileOpen(!mobileOpen)}>
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileOpen && (
+          <div className="absolute top-16 left-0 w-full bg-white border-t shadow-sm md:hidden">
+            <ul className="flex flex-col text-sm text-slate-700">
               {[
                 ["dashboard", "Dashboard"],
                 ["calendar", "Calendar"],
@@ -159,30 +217,31 @@ export default function App() {
               ].map(([page, label]) => (
                 <li
                   key={page}
-
                   onClick={() => {
+                    setMobileOpen(false);
                     setLoading(true);
                     setCurrentPage(page);
                     setTimeout(() => setLoading(false), 3000);
                   }}
-                  className={`cursor-pointer ${currentPage === page ? "text-indigo-600 font-medium" : ""}`}
+                  className={`px-4 py-2 border-b cursor-pointer hover:bg-indigo-50 ${
+                    currentPage === page ? "text-indigo-600 font-medium" : ""
+                  }`}
                 >
                   {label}
                 </li>
               ))}
+
+              <li className="px-4 py-2">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left text-red-500 border border-red-400 px-2 py-1 rounded hover:bg-red-50 text-xs"
+                >
+                  Logout
+                </button>
+              </li>
             </ul>
           </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-600">{user.name}</span>
-            <button
-              onClick={handleLogout}
-              className="text-xs text-red-500 border border-red-400 px-2 py-1 rounded hover:bg-red-50"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
+        )}
       </nav>
 
       {/* ✅ Loader Overlay */}
