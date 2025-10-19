@@ -1,45 +1,39 @@
 import React, { useState } from "react";
 import Loader from "../Utlies/Loader";
+import axios from "axios";
 
 const Login = ({ onLogin }) => {
   const [form, setForm] = useState({
-    name: "Frank Dev",
-    company: "MBS Tech",
-    email: "frank@mbstech.co.za",
+    username: "",
+    company: "",
+    email: "",
   });
 
-  const [loading, setLoading] = useState(false); // ✅ added
+  const [loading, setLoading] = useState(false);
 
-  // ✅ Default allowed user
-  const defaultUser = {
-    name: "Frank Dev",
-    company: "MBS Tech",
-    email: "frank@mbstech.co.za",
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    // ✅ Check credentials
-    if (
-      form.name === defaultUser.name &&
-      form.company === defaultUser.company &&
-      form.email === defaultUser.email
-    ) {
-      setLoading(true); // ✅ show loader
-      setTimeout(() => {
-        localStorage.setItem("user", JSON.stringify(defaultUser));
-        onLogin(defaultUser);
-        setLoading(false); // ✅ hide loader after 1s
-      }, 1000);
-    } else {
-      alert("Invalid login details. Please try again.");
+    try {
+      const res = await axios.post("http://localhost:5000/api/login", form);
+
+      if (res.data.success) {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        onLogin(res.data.user);
+      } else {
+        alert("Invalid login details. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error. Try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex items-center justify-center h-screen bg-indigo-100 relative">
-      {/* ✅ Loader overlay */}
       <Loader show={loading} label="Nex in..." />
 
       <form
@@ -53,9 +47,9 @@ const Login = ({ onLogin }) => {
 
         <input
           type="text"
-          placeholder="Name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          placeholder="Username"
+          value={form.username}
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
           className="w-full mb-3 border rounded p-2"
         />
         <input
@@ -79,11 +73,6 @@ const Login = ({ onLogin }) => {
         >
           Login
         </button>
-
-        {/* Optional hint */}
-        <p className="text-xs text-center mt-4 text-slate-500">
-          Default hint login: Dev / MBS Tech / frank@mbstech.co.za
-        </p>
       </form>
     </div>
   );

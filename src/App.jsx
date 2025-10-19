@@ -156,7 +156,7 @@ export default function App() {
           {/* Desktop Menu */}
           <ul
             className="hidden md:flex gap-4 text-sm text-slate-600"
-            style={{ marginLeft: "-2.5rem" }}
+            style={{ marginLeft: "-3.5rem" }}
           >
             {[
               ["dashboard", "Dashboard"],
