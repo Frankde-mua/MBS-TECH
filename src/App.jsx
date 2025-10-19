@@ -266,7 +266,7 @@ export default function App() {
             />
           )}
           {currentPage === "billing" && <Billing />}
-          {currentPage === "inventory" && renderInventory()}
+          {currentPage === "inventory" && renderInventory({ setLoading })}
           {currentPage === "expense" && <Expenditure />}
           {currentPage === "customer" && <ClientGrid setCurrentPage={setCurrentPage} />}
           {currentPage === "profile" && <Profile user={user} />}

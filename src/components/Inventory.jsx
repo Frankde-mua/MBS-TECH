@@ -4,7 +4,7 @@ import { TopSaleList, LeastSales, OrderTracking } from "./Utlies/InventoryList";
 import StockForm from "./Utlies/StockForm";
 import inventoryStock from "../data/inventory";
 
-const InventoryGrid = () => {
+const InventoryGrid = ({ setLoading }) => {
   const gridRef = useRef();
   const [rowData, setRowData] = useState(inventoryStock);
   const [modalOpen, setModalOpen] = useState(null); // "top" | "least" | "order" | null
@@ -56,6 +56,14 @@ const InventoryGrid = () => {
     reader.readAsText(file);
   };
 
+  const handleAddClick = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setShowAddModal(true);
+      setLoading(false);
+    }, 1500); // Loader duration before modal
+  };
+
   return (
     <div style={containerStyle}>
       {/* --- Stock Inventory Table --- */}
@@ -71,17 +79,17 @@ const InventoryGrid = () => {
             Import CSV
             <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
           </label>
-        <button
-          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-          onClick={() => setShowAddModal(true)}
-        >
-          Add
-        </button>
-        <button
-          className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700"
-        >
-          Print
-        </button>
+          <button
+            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+            onClick={handleAddClick}
+          >
+            Add
+          </button>
+          <button
+            className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700"
+          >
+            Print
+          </button>
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm">
           <div className="ag-theme-alpine" style={{ height: "300px", width: "100%" }}>
@@ -101,21 +109,21 @@ const InventoryGrid = () => {
 
       {/* 🟦 Add Client Modal */}
       {showAddModal && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-lg overflow-y-auto p-6 relative">
-      <h2 className="text-2xl font-bold mb-4 text-center">Add Stock</h2>
-      <StockForm />
-      <div className="mt-6 flex justify-center">
-        <button
-          onClick={() => setShowAddModal(false)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-lg overflow-y-auto p-6 relative">
+            <h2 className="text-2xl font-bold mb-4 text-center">Add Stock</h2>
+            <StockForm />
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {/* --- Three Cards --- */}
@@ -175,15 +183,15 @@ const InventoryGrid = () => {
   );
 };
 
-const renderInventory = () => (
+const renderInventory = ({ setLoading }) => (
   <div>
     <header className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Inventory</h1>
-          <p className="text-sm text-slate-600">Goods control and management.</p>
-        </div>
-      </header>
-    <InventoryGrid />
+      <div>
+        <h1 className="text-2xl font-semibold">Inventory</h1>
+        <p className="text-sm text-slate-600">Goods control and management.</p>
+      </div>
+    </header>
+    <InventoryGrid setLoading={setLoading} />
   </div>
 );
 
