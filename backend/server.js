@@ -136,18 +136,18 @@ const seedDefaultUsers = async () => {
 
 // Login API
 app.post("/api/login", async (req, res) => {
-  const { username, company, email } = req.body;
+  const { username, company, password } = req.body;
 
   try {
     const { rows } = await nexsysPool.query(
-      `SELECT * FROM users WHERE username=$1 AND company_name=$2 AND email=$3`,
-      [username, company, email]
+      `SELECT * FROM users WHERE username=$1 AND company_name=$2 AND password=$3`,
+      [username, company, password]
     );
 
     if (rows.length === 0) {
       return res.json({ success: false, message: "Invalid credentials" });
     }
-
+    console.log(`✅ User ${username} from company ${company} logged in successfully`);
     return res.json({ success: true, user: rows[0] });
   } catch (err) {
     console.error("Login error:", err);

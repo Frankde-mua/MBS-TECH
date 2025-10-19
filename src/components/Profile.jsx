@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 export default function Profile({ user }) {
   const [form, setForm] = useState(user);
-
+  console.log("Profile user data:", user);
   const handleSave = () => {
     localStorage.setItem("user", JSON.stringify(form));
     alert("Profile updated successfully!");
@@ -22,7 +22,7 @@ export default function Profile({ user }) {
             <label className="text-sm font-medium">Name</label>
             <input
               type="text"
-              value={form.name}
+              value={form.username}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full border p-2 rounded"
             />
@@ -31,7 +31,7 @@ export default function Profile({ user }) {
             <label className="text-sm font-medium">Company</label>
             <input
               type="text"
-              value={form.company}
+              value={form.company_name}
               onChange={(e) => setForm({ ...form, company: e.target.value })}
               className="w-full border p-2 rounded"
             />

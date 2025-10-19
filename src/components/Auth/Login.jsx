@@ -6,7 +6,7 @@ const Login = ({ onLogin }) => {
   const [form, setForm] = useState({
     username: "",
     company: "",
-    email: "",
+    password: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -42,7 +42,7 @@ const Login = ({ onLogin }) => {
       >
         <h2 className="text-2xl font-semibold text-center mb-4">Login</h2>
         <p className="text-sm text-center text-slate-500 mb-6">
-          Enter your details to access your dashboard
+          Enter your credentials to access your dashboard
         </p>
 
         <input
@@ -60,10 +60,10 @@ const Login = ({ onLogin }) => {
           className="w-full mb-3 border rounded p-2"
         />
         <input
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
           className="w-full mb-4 border rounded p-2"
         />
 
