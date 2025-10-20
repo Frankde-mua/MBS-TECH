@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import pkg from "pg";
+import { usersToSeed } from "./data.js"
 
 const { Pool } = pkg;
 
@@ -52,11 +53,10 @@ const createDatabaseIfNotExists = async (dbName) => {
 };
 
 // ---------------------
-// ✅ Seed default users
+// ✅ Seed default users with roles
 // ---------------------
 const seedDefaultUsers = async () => {
   try {
-    // Ensure main tables exist
     await nexsysPool.query(`
       CREATE TABLE IF NOT EXISTS companies (
         id SERIAL PRIMARY KEY,
@@ -82,28 +82,18 @@ const seedDefaultUsers = async () => {
         created_at TIMESTAMP DEFAULT NOW(),
         licence_no VARCHAR(100),
         business_type VARCHAR(50),
-        onHold BOOLEAN DEFAULT FALSE
+        onHold BOOLEAN DEFAULT FALSE,
+        role VARCHAR(20) DEFAULT 'user'
       )
     `);
 
-    const usersToSeed = [
-      {
-        username: "Frank Dev",
-        email: "frank@mbstech.co.za",
-        company: "MBS Tech",
-        password: "password123",
-      },
-      {
-        username: "Jane Doe",
-        email: "jane@devsolutions.com",
-        company: "DevSolutions",
-        password: "password123",
-      },
-    ];
+    //const usersToSeed = generatedUsers;
 
     for (const u of usersToSeed) {
       const companyDbName = `company_${u.company.toLowerCase().replace(/\s+/g, "_")}`;
-      await createDatabaseIfNotExists(companyDbName);
+      if (u.role !== "superadmin") {
+        await createDatabaseIfNotExists(companyDbName);
+      }
 
       await nexsysPool.query(
         `INSERT INTO companies (company_name) VALUES ($1) ON CONFLICT (company_name) DO NOTHING`,
@@ -117,12 +107,12 @@ const seedDefaultUsers = async () => {
 
       if (userExists.rowCount === 0) {
         await nexsysPool.query(
-          `INSERT INTO users (username, password, email, company_name) VALUES ($1,$2,$3,$4)`,
-          [u.username, u.password, u.email, u.company]
+          `INSERT INTO users (username, password, email, company_name, role) VALUES ($1,$2,$3,$4,$5)`,
+          [u.username, u.password, u.email, u.company, u.role]
         );
-        console.log(`✅ Seeded user ${u.username} / ${u.company}`);
+        console.log(`✅ Seeded user ${u.username} / ${u.company} as ${u.role}`);
       } else {
-        console.log(`⚠️ User ${u.username} / ${u.company} already exists, skipping seeding`);
+        console.log(`⚠️ User ${u.username} / ${u.company} already exists, skipping`);
       }
     }
   } catch (err) {
@@ -147,6 +137,7 @@ app.post("/api/login", async (req, res) => {
     if (rows.length === 0) {
       return res.json({ success: false, message: "Invalid credentials" });
     }
+
     console.log(`✅ User ${username} from company ${company} logged in successfully`);
     return res.json({ success: true, user: rows[0] });
   } catch (err) {
@@ -155,42 +146,21 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Create new company
+// Create company (Superadmin only)
 app.post("/api/create-company", async (req, res) => {
-  const { username, password, email, company } = req.body;
+  const { username, company, password, email } = req.body;
+
+  const userRes = await nexsysPool.query(`SELECT role FROM users WHERE username=$1`, [username]);
+  const userRole = userRes.rows[0]?.role;
+
+  if (userRole !== "superadmin") {
+    return res.status(403).json({ success: false, message: "Forbidden: Only Superadmin can create companies" });
+  }
+
   const dbName = `company_${company.toLowerCase().replace(/\s+/g, "_")}`;
 
   try {
     await createDatabaseIfNotExists(dbName);
-
-    // Ensure main NexSys tables exist
-    await nexsysPool.query(`
-      CREATE TABLE IF NOT EXISTS companies (
-        id SERIAL PRIMARY KEY,
-        company_name VARCHAR(100) UNIQUE,
-        created_at TIMESTAMP DEFAULT NOW()
-      )
-    `);
-    await nexsysPool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(50),
-        password VARCHAR(255),
-        email VARCHAR(255),
-        cel VARCHAR(255),
-        tel VARCHAR(255),
-        vat_no BIGINT,
-        company_name VARCHAR(100) REFERENCES companies(company_name),
-        address VARCHAR(255),
-        city VARCHAR(100),
-        country VARCHAR(100),
-        postal_code VARCHAR(20),
-        created_at TIMESTAMP DEFAULT NOW(),
-        licence_no VARCHAR(100),
-        business_type VARCHAR(50),
-        onHold BOOLEAN DEFAULT FALSE
-      )
-    `);
 
     await nexsysPool.query(
       `INSERT INTO companies (company_name) VALUES ($1) ON CONFLICT (company_name) DO NOTHING`,
@@ -204,7 +174,7 @@ app.post("/api/create-company", async (req, res) => {
 
     if (userExists.rowCount === 0) {
       await nexsysPool.query(
-        `INSERT INTO users (username, password, email, company_name) VALUES ($1,$2,$3,$4)`,
+        `INSERT INTO users (username, password, email, company_name, role) VALUES ($1,$2,$3,$4,'admin')`,
         [username, password, email, company]
       );
     }
@@ -216,33 +186,210 @@ app.post("/api/create-company", async (req, res) => {
   }
 });
 
-// Query per-company DB example
-app.get("/api/company/:company/clients", async (req, res) => {
-  const { company } = req.params;
-  const dbName = `company_${company.toLowerCase().replace(/\s+/g, "_")}`;
+// Create user (Admin only)
+app.post("/api/create-user", async (req, res) => {
+  const { username, email, password, company, creatorUsername } = req.body;
 
   try {
-    const companyPool = new Pool({
-      user: process.env.PG_USER,
-      host: process.env.PG_HOST,
-      database: dbName,
-      password: process.env.PG_PASSWORD,
-      port: process.env.PG_PORT,
-    });
+    const creatorRes = await nexsysPool.query(
+      `SELECT role, company_name FROM users WHERE username=$1`,
+      [creatorUsername]
+    );
+    const creator = creatorRes.rows[0];
 
-    const { rows } = await companyPool.query("SELECT * FROM clients LIMIT 5");
+    if (!creator) return res.status(404).json({ success: false, message: "Creator not found" });
+
+    if (creator.role !== "admin" && creator.role !== "superadmin") {
+      return res.status(403).json({ success: false, message: "Forbidden: Only admins can create users" });
+    }
+
+    if (creator.role === "admin" && creator.company_name !== company) {
+      return res.status(403).json({ success: false, message: "Forbidden: Cannot create user outside your company" });
+    }
+
+    const userExists = await nexsysPool.query(
+      `SELECT * FROM users WHERE username=$1 AND company_name=$2`,
+      [username, company]
+    );
+
+    if (userExists.rowCount > 0) {
+      return res.status(400).json({ success: false, message: "User already exists" });
+    }
+
+    await nexsysPool.query(
+      `INSERT INTO users (username, password, email, company_name, role) VALUES ($1,$2,$3,$4,'user')`,
+      [username, password, email, company]
+    );
+
+    res.json({ success: true, message: `User ${username} created successfully for company ${company}` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Superadmin overview
+app.get("/api/superadmin/overview", async (req, res) => {
+  try {
+    const companiesRes = await nexsysPool.query(`SELECT * FROM companies`);
+    const usersRes = await nexsysPool.query(`SELECT * FROM users`);
+
+    res.json({
+      success: true,
+      companies: companiesRes.rows,
+      users: usersRes.rows,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Get all users (Superadmin)
+app.get("/api/superadmin/users", async (req, res) => {
+  try {
+    const { rows } = await nexsysPool.query("SELECT id, username, email, company_name, role FROM users");
     res.json(rows);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error fetching company data");
+    res.status(500).json([]);
   }
 });
+
+// Get all companies (Superadmin)
+app.get("/api/superadmin/companies", async (req, res) => {
+  try {
+    const { rows } = await nexsysPool.query("SELECT id, company_name FROM companies");
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json([]);
+  }
+});
+
+
+// ---------------------
+// ✅ Expenditure / Expense Category API
+// ---------------------
+// Helper: get company pool
+const getCompanyPool = (companyName) => {
+  const dbName = `company_${companyName.toLowerCase().replace(/\s+/g, "_")}`;
+  return new Pool({
+    user: process.env.PG_USER,
+    host: process.env.PG_HOST,
+    database: dbName,
+    password: process.env.PG_PASSWORD,
+    port: process.env.PG_PORT,
+  });
+};
+
+// Get all expense categories for a company
+app.get("/api/expense-categories/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const { rows } = await companyPool.query("SELECT id, category_name FROM expense_category ORDER BY category_name ASC");
+    res.json({ success: true, categories: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Error fetching expense categories" });
+  }
+});
+
+// Get all expenditures for a company
+app.get("/api/expenditures/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const { rows } = await companyPool.query(
+      `SELECT e.id, e.date, e.description, e.amount, e.vat_amount, e.receipt_no, e.scan, ec.category_name
+       FROM expenditure e
+       LEFT JOIN expense_category ec ON e.category_id = ec.id
+       ORDER BY e.date DESC`
+    );
+    res.json({ success: true, expenditures: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Error fetching expenditures" });
+  }
+});
+
+// ✅ Fixed backend insert to match your table layout
+app.post("/api/expenditures/:company", async (req, res) => {
+  const { company } = req.params;
+  const {
+    date,
+    supplier,
+    category_id,
+    category_name,
+    description,
+    amount,
+    vat_amount,
+    payment_method,
+    receipt_no,
+    scan,
+    notes,
+  } = req.body;
+
+  if (!category_id || !description || !amount) {
+    return res.status(400).json({
+      success: false,
+      message: "Category, description, and amount are required",
+    });
+  }
+
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const insertQuery = `
+      INSERT INTO expenditure (
+        date,
+        supplier,
+        category_name,
+        description,
+        amount,
+        payment_method,
+        receipt_no,
+        scan,
+        notes,
+        created_at,
+        category_id,
+        vat_amount
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), $10, $11)
+      RETURNING *
+    `;
+
+    const values = [
+      date,
+      supplier || null,
+      category_name,
+      description,
+      parseFloat(amount),
+      payment_method || null,
+      receipt_no || null,
+      scan || null,
+      notes || null,
+      category_id,
+      vat_amount ? parseFloat(vat_amount) : 0,
+    ];
+
+    const { rows } = await companyPool.query(insertQuery, values);
+    res.json({ success: true, expenditure: rows[0] });
+  } catch (err) {
+    console.error("❌ Error inserting expenditure:", err);
+    res.status(500).json({ success: false, message: "Error creating expenditure" });
+  }
+});
+
 
 // ---------------------
 // ✅ Start Server
 // ---------------------
 app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  await createDatabaseIfNotExists("nexsys"); // ensure main DB exists
-  await seedDefaultUsers(); // seed default users
+  await createDatabaseIfNotExists("nexsys");
+  await seedDefaultUsers();
 });

@@ -20,6 +20,7 @@ import ClientGrid from "./components/Customers";
 import renderInventory from "./components/Inventory";
 import Profile from "./components/Profile";
 import Expenditure from "./components/Expenditure";
+import SuperAdminDashboard from "./components/SuperAdminDashboard";
 
 function startOfMonth(date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -41,7 +42,6 @@ export default function App() {
     const saved = localStorage.getItem("user");
     return saved ? JSON.parse(saved) : null;
   });
-
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [events, setEvents] = useState(SAMPLE_EVENTS);
   const [selectedDate, setSelectedDate] = useState(formatISO(new Date()));
@@ -53,9 +53,7 @@ export default function App() {
 
   useEffect(() => {
     const saved = localStorage.getItem("user");
-    if (saved) {
-      setUser(JSON.parse(saved));
-    }
+    if (saved) setUser(JSON.parse(saved));
     setCheckingAuth(false);
   }, []);
 
@@ -66,7 +64,6 @@ export default function App() {
       setUser(null);
       alert("Session expired. You’ve been logged out automatically.");
     }, 60 * 60 * 1000);
-
     return () => clearTimeout(logoutTimer);
   }, [user]);
 
@@ -88,13 +85,38 @@ export default function App() {
     }, 1200);
   };
 
-  if (checkingAuth) {
-    return <Loader show={true} label="Loading..." />;
-  }
+  if (checkingAuth) return <Loader show={true} label="Loading..." />;
+  if (!user) return <Login onLogin={setUser} />;
 
-  if (!user) {
-    return <Login onLogin={setUser} />;
-  }
+  // ✅ Define role-based navigation
+  const NAV_ITEMS = {
+    superadmin: [
+      ["dashboard", "Dashboard"],
+      ["companies", "Companies"],
+      ["users", "Users"],
+      ["profile", "Profile"],
+    ],
+    admin: [
+      ["dashboard", "Dashboard"],
+      ["users", "Users"],
+      ["calendar", "Calendar"],
+      ["billing", "Billing"],
+      ["inventory", "Inventory"],
+      ["expense", "Expense"],
+      ["customer", "Customer"],
+      ["profile", "Profile"],
+    ],
+    user: [
+      ["dashboard", "Dashboard"],
+      ["calendar", "Calendar"],
+      ["billing", "Billing"],
+      ["customer", "Customer"],
+      ["profile", "Profile"],
+    ],
+  };
+
+  const role = user.role?.toLowerCase() || "user";
+  const navList = NAV_ITEMS[role] || NAV_ITEMS.user;
 
   const renderDashboard = () => (
     <div>
@@ -146,7 +168,6 @@ export default function App() {
       {/* ✅ Navbar */}
       <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-30 h-16 flex items-center">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between w-full">
-          {/* LEFT: Logo + Nav items grouped */}
           <div className="flex items-center gap-6" style={{ marginLeft: "-2.5rem" }}>
             <div className="flex items-center h-24">
               <img
@@ -156,17 +177,9 @@ export default function App() {
               />
             </div>
 
-            {/* nav items (desktop) */}
+            {/* Desktop nav */}
             <ul className="hidden md:flex gap-4 text-sm text-slate-600">
-              {[
-                ["dashboard", "Dashboard"],
-                ["calendar", "Calendar"],
-                ["billing", "Billing"],
-                ["inventory", "Inventory"],
-                ["expense", "Expense"],
-                ["customer", "Customer"],
-                ["profile", "Profile"],
-              ].map(([page, label]) => (
+              {navList.map(([page, label]) => (
                 <li
                   key={page}
                   onClick={() => {
@@ -184,7 +197,7 @@ export default function App() {
             </ul>
           </div>
 
-          {/* RIGHT: User & Logout */}
+          {/* User info + logout */}
           <div className="hidden md:flex items-center gap-3">
             <span className="text-sm text-slate-600">{user.username}</span>
             <button
@@ -195,7 +208,7 @@ export default function App() {
             </button>
           </div>
 
-          {/* Mobile Hamburger Button */}
+          {/* Mobile */}
           <div className="md:hidden flex items-center">
             <button onClick={() => setMobileOpen(!mobileOpen)}>
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
@@ -203,23 +216,15 @@ export default function App() {
           </div>
         </div>
 
-        {/* ✅ Mobile menu - closes after page selected */}
+        {/* ✅ Mobile menu */}
         {mobileOpen && (
           <div className="absolute top-16 left-0 w-full bg-white border-t shadow-sm md:hidden">
             <ul className="flex flex-col text-sm text-slate-700">
-              {[
-                ["dashboard", "Dashboard"],
-                ["calendar", "Calendar"],
-                ["billing", "Billing"],
-                ["inventory", "Inventory"],
-                ["expense", "Expense"],
-                ["customer", "Customer"],
-                ["profile", "Profile"],
-              ].map(([page, label]) => (
+              {navList.map(([page, label]) => (
                 <li
                   key={page}
                   onClick={() => {
-                    setMobileOpen(false); // ✅ close menu
+                    setMobileOpen(false);
                     setLoading(true);
                     setCurrentPage(page);
                     setTimeout(() => setLoading(false), 3000);
@@ -231,11 +236,10 @@ export default function App() {
                   {label}
                 </li>
               ))}
-
               <li className="px-4 py-2">
                 <button
                   onClick={() => {
-                    setMobileOpen(false); // ✅ close after logout too
+                    setMobileOpen(false);
                     handleLogout();
                   }}
                   className="w-full text-left text-red-500 border border-red-400 px-2 py-1 rounded hover:bg-red-50 text-xs"
@@ -250,9 +254,12 @@ export default function App() {
 
       <Loader show={loading} label={loaderLabel} />
 
+      {/* ✅ Page content */}
       <main className="flex-1 overflow-y-auto bg-indigo-100 mt-16 px-4 pb-6">
         <div className="max-w-7xl mx-auto w-full">
-          {currentPage === "dashboard" && renderDashboard()}
+          {currentPage === "dashboard" && role === "superadmin" && <SuperAdminDashboard />}
+          {currentPage === "dashboard" && role !== "superadmin" && renderDashboard()}
+
           {currentPage === "calendar" && (
             <Calendar
               current={current}
@@ -270,13 +277,27 @@ export default function App() {
           {currentPage === "billing" && <Billing />}
           {currentPage === "inventory" && renderInventory({ setLoading })}
           {currentPage === "expense" && <Expenditure />}
-          {currentPage === "customer" && (
-            <ClientGrid setCurrentPage={setCurrentPage} />
-          )}
+          {currentPage === "customer" && <ClientGrid setCurrentPage={setCurrentPage} />}
           {currentPage === "profile" && <Profile user={user} />}
+
+          {/* placeholders for new pages */}
+          {currentPage === "companies" && role === "superadmin" && (
+            <div className="p-6 bg-white rounded-2xl shadow-sm">
+              <h2 className="text-xl font-semibold mb-4">Manage Companies</h2>
+              <p>Superadmin can view or create new companies here.</p>
+            </div>
+          )}
+
+          {currentPage === "users" && role !== "user" && (
+            <div className="p-6 bg-white rounded-2xl shadow-sm">
+              <h2 className="text-xl font-semibold mb-4">Manage Users</h2>
+              <p>Admins and Superadmins can view or create new users here.</p>
+            </div>
+          )}
         </div>
       </main>
 
+      {/* Footer */}
       <footer className="bg-gray-100 border-t py-4 mt-auto">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
           <p>© {new Date().getFullYear()} NexSys. All rights reserved.</p>
