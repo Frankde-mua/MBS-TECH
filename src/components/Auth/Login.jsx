@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Loader from "../Utlies/Loader";
 import axios from "axios";
-import NexSysLogo from "../../assets/NexSys-Logo.png";
+import NexSysLogo from "../../assets/nexsys-logo.png";
 
 const Login = ({ onLogin }) => {
   const [form, setForm] = useState({
