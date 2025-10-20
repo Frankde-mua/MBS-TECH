@@ -16,7 +16,7 @@ const Login = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const res = await axios.post("https://twelve-hornets-smell.loca.lt/api/login", form);
+      const res = await axios.post("https://rich-drinks-bow.loca.lt/api/login", form);
 
       if (res.data.success) {
         localStorage.setItem("user", JSON.stringify(res.data.user));
