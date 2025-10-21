@@ -9,6 +9,7 @@ import {
   ValidationModule,
 } from "ag-grid-community";
 import { RowNumbersModule } from "ag-grid-enterprise";
+import FinancialMenu from "./Utlies/FinancialMenu";
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
@@ -182,6 +183,15 @@ const Expenditure = () => {
         <h1 className="text-2xl font-semibold">Company Expenses</h1>
         <p className="text-sm text-slate-600">Record daily expenses.</p>
       </header>
+
+     {/* Financiel Reporta */}
+     <div className="hidden md:flex gap-4 text-sm text-slate-600 items-center pb-2">
+          <FinancialMenu onSelect={(option) => {
+            setLoading(true);
+            setCurrentPage(option);
+            setTimeout(() => setLoading(false), 500);
+          }} />
+        </div>
 
       {/* Add Expense Form */}
       <div className="flex gap-2 mb-4 flex-wrap">

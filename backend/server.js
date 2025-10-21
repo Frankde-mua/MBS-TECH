@@ -297,6 +297,20 @@ app.get("/api/expense-categories/:company", async (req, res) => {
   }
 });
 
+// Get all calender status for a company
+app.get("/api/expense-categories/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const { rows } = await companyPool.query("SELECT id, status_desc FROM calendar_staus ORDER BY status_desc ASC");
+    res.json({ success: true, statuses: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Error fetching expense categories" });
+  }
+});
+
 // Get all expenditures for a company
 app.get("/api/expenditures/:company", async (req, res) => {
   const { company } = req.params;

@@ -18,5 +18,5 @@ VALUES
     ('Financial & Bank Charges'),
     ('Depreciation / Assets'),
     ('Miscellaneous / Sundry')
-ON CONFLICT (category_name) DO NOTHING;  -- avoid duplicates if run multiple times
+ON CONFLICT (category_name) DO NOTHING;
 

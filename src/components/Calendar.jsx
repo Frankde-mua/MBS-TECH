@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 
 export default function Calendar({
@@ -22,6 +22,9 @@ export default function Calendar({
     const firstCellDate = addDays(start, -startDay);
     return Array.from({ length: totalCells }, (_, i) => addDays(firstCellDate, i));
   }, [current]);
+  const [statuses, setStatuses] = useState([]);
+  const saved = JSON.parse(localStorage.getItem("user"));
+  const companyName = saved?.company_name?.toLowerCase();
 
   const monthLabel = useMemo(
     () => current.toLocaleString(undefined, { month: "long", year: "numeric" }),
@@ -45,6 +48,25 @@ export default function Calendar({
     setEvents((ev) => ev.filter((e) => e.id !== id));
   }
 
+    // --- Fetch status ---
+    useEffect(() => {
+        if (!companyName) return;
+        const fetchCategories = async () => {
+          try {
+            const res = await axios.get(
+              `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/status/${companyName}`,
+              { headers: { "ngrok-skip-browser-warning": "true" } }
+            );
+            if (res.data.success) setStatuses(res.data.statuses);
+          } catch (err) {
+            console.error("Error fetching categories:", err);
+          }
+        };
+        fetchCategories();
+      }, [companyName]);
+      console.log("After getting statuses from db")
+      console.log(statuses);
+
   const agendaForSelected = events.filter((e) => e.date === selectedDate);
 
   return (
@@ -52,7 +74,7 @@ export default function Calendar({
 
       <header className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Diary</h1>
+          <h1 className="text-2xl font-semibold">Calendar</h1>
           <p className="text-sm text-slate-600">Keep track of agendas and orders.</p>
         </div>
       </header>
@@ -172,19 +194,6 @@ export default function Calendar({
             </ul>
           )}
         </section>
-        <br />
-
-        <aside className="lg:col-span-3">
-          <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-sm font-semibold">Completed appointments today</div>
-
-            </div>
-            <p>
-              0.
-            </p>
-          </div>
-        </aside>
       </div>
     </div>
   );
