@@ -38,7 +38,7 @@ const Login = ({ onLogin }) => {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-indigo-100 relative space-y-6">
-      <Loader show={loading} label="Nex in..." />
+      <Loader show={loading} label="Logging in..." />
 
       {/* Logo sits above the card */}
       <img

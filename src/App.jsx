@@ -74,7 +74,7 @@ export default function App() {
   }, []);
 
   const handleLogout = () => {
-    setLoaderLabel("Nex out...");
+    setLoaderLabel("Logging out...");
     setLoading(true);
     setTimeout(() => {
       localStorage.removeItem("user");
