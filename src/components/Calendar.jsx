@@ -101,7 +101,8 @@ export default function Calendar({
       );
 
       if (res.data.success) {
-        const e = res.data.status;
+        const e = res.data.agenda;
+        console.log("New agenda saved:", e);
         setEvents(ev => [...ev, {
           id: e.id,
           title: e.agenda,
