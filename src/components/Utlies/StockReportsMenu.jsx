@@ -1,20 +1,17 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Example modal content components
 const AuditTrail = () => <div>Audit Trail Content</div>;
 const FramesMonthToDate = () => <div>Frames Month To Date Content</div>;
 const GeneralReports = () => <div>General Reports Content</div>;
 const GoodsReceived = () => <div>Goods Received / Returned Listing Content</div>;
 const GrossProfit = () => <div>Gross Profit Content</div>;
-const JobCost = () => <div>Job Cost Content</div>;
 const ProductSalesReport = () => <div>Product Sales Report Content</div>;
 const Reorder = () => <div>Reorder Content</div>;
 const TagReport = () => <div>Tag Report Content</div>;
 const StockOrderReport = () => <div>Stock Order Report Content</div>;
 const StockUsageReport = () => <div>Stock Usage Report Content</div>;
 
-// Map of report names to components
 const REPORTS = {
   "Audit Trail": AuditTrail,
   "Frames Month To Date": FramesMonthToDate,
