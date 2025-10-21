@@ -405,6 +405,31 @@ app.post("/api/status/:company", async (req, res) => {
   }
 });
 
+// Delete a status by id
+app.delete("/api/status/:company/:id", async (req, res) => {
+  const { company, id } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const { rowCount } = await companyPool.query(
+      `DELETE FROM calendar_status WHERE id = $1`,
+      [id]
+    );
+
+    if (rowCount === 0) {
+      return res.json({
+        success: false,
+        message: "Cannot delete status. It is used in the diary or does not exist."
+      });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Error deleting status" });
+  }
+});
+
 // Get all calender agendas for a company
 app.get("/api/calendar/:company", async (req, res) => {
   const { company } = req.params;
@@ -440,35 +465,27 @@ app.post("/api/calendar/:company", async (req, res) => {
     const values = [agenda, status_id || null, time || "00:00", date];
     const { rows } = await companyPool.query(insertQuery, values);
 
-    res.json({ success: true, entry: rows[0] });
+    res.json({ success: true, agenda: rows[0] });
   } catch (err) {
     console.error("Error inserting calendar entry:", err);
     res.status(500).json({ success: false, message: "Error adding agenda" });
   }
 });
 
-// Delete a status by id
-app.delete("/api/status/:company/:id", async (req, res) => {
+// Delete a agenda by id
+app.delete("/api/calendar/:company/:id", async (req, res) => {
   const { company, id } = req.params;
   const companyPool = getCompanyPool(company);
 
   try {
     const { rowCount } = await companyPool.query(
-      `DELETE FROM calendar_status WHERE id = $1`,
+      `DELETE FROM calendar WHERE id = $1`,
       [id]
     );
-
-    if (rowCount === 0) {
-      return res.json({
-        success: false,
-        message: "Cannot delete status. It is used in the diary or does not exist."
-      });
-    }
-
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: "Error deleting status" });
+    res.status(500).json({ success: false, message: "Error deleting agenda" });
   }
 });
 
