@@ -77,9 +77,11 @@ export default function Calendar({
   console.log("After getting agendas from backend:");
   console.log("Events:", events);
 
-  // --- Open Agenda Modal ---
-  const handleOpenAgendaModal = (date) => {
-    setAgendaDate(date);
+ // --- Open Agenda Modal ---
+ const handleOpenAgendaModal = (date) => {
+    const newDate = new Date(new Date(date).setDate(new Date(date).getDate() + 1));
+    const dateFormated = newDate.toISOString().slice(0, 10);
+    setAgendaDate(dateFormated);
     setNewAgenda({ title: "", time: "00:00", status_id: "" });
     setShowAgendaModal(true);
   };
