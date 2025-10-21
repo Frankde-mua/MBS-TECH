@@ -298,12 +298,12 @@ app.get("/api/expense-categories/:company", async (req, res) => {
 });
 
 // Get all calender status for a company
-app.get("/api/expense-categories/:company", async (req, res) => {
+app.get("/api/status/:company", async (req, res) => {
   const { company } = req.params;
   const companyPool = getCompanyPool(company);
 
   try {
-    const { rows } = await companyPool.query("SELECT id, status_desc FROM calendar_staus ORDER BY status_desc ASC");
+    const { rows } = await companyPool.query("SELECT id, status_desc FROM calendar_status ORDER BY status_desc ASC");
     res.json({ success: true, statuses: rows });
   } catch (err) {
     console.error(err);
@@ -311,26 +311,82 @@ app.get("/api/expense-categories/:company", async (req, res) => {
   }
 });
 
-// Get all expenditures for a company
-app.get("/api/expenditures/:company", async (req, res) => {
+
+// Get all calender status for a company
+app.get("/api/status/:company", async (req, res) => {
   const { company } = req.params;
   const companyPool = getCompanyPool(company);
 
   try {
-    const { rows } = await companyPool.query(
-      `SELECT e.id, e.date, e.description, e.amount, e.vat_amount, e.receipt_no, e.scan, ec.category_name
-       FROM expenditure e
-       LEFT JOIN expense_category ec ON e.category_id = ec.id
-       ORDER BY e.date DESC`
-    );
-    res.json({ success: true, expenditures: rows });
+    const { rows } = await companyPool.query("SELECT id, status_desc FROM calendar_status ORDER BY status_desc ASC");
+    res.json({ success: true, statuses: rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: "Error fetching expenditures" });
+    res.status(500).json({ success: false, message: "Error fetching calendar status" });
   }
 });
 
-// ✅ Fixed backend insert to match your table layout
+// Create new status
+app.post("/api/status/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+  const { status_desc } = req.body;
+
+  try {
+    const insertQuery = `
+      INSERT INTO calendar_status (status_desc)
+      VALUES ($1)
+      RETURNING *;
+    `;
+    const values = [status_desc];
+    const { rows } = await companyPool.query(insertQuery, values);
+
+    res.json({ success: true, status: rows[0] });
+  } catch (err) {
+    console.error("Error inserting new status:", err);
+    res.status(500).json({ success: false, message: "Error adding status" });
+  }
+});
+
+// Get all calender agendas for a company
+app.get("/api/calendar/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const { rows } = await companyPool.query("SELECT c.id, c.agenda, cs.status_desc, c.time FROM calendar c LEFT JOIN calendar_status cs ON c.status_id = cs.id ORDER BY c.id");
+    res.json({ success: true, statuses: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Error fetching calendar status" });
+  }
+});
+
+// Post a new agenda
+app.post("/api/calendar/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+  const { agenda, status_id, time } = req.body;
+
+  try {
+    const insertQuery = `
+      INSERT INTO calendar (agenda, status_id, time)
+      VALUES ($1, $2, $3)
+      RETURNING *;
+    `;
+    const values = [agenda, status_id || null, time || "00:00"];
+
+    const { rows } = await companyPool.query(insertQuery, values);
+
+    res.json({ success: true, agenda: rows[0] });
+  } catch (err) {
+    console.error("Error inserting new agenda:", err);
+    res.status(500).json({ success: false, message: "Error adding agenda" });
+  }
+});
+
+
+// Post a new expenditure
 app.post("/api/expenditures/:company", async (req, res) => {
   const { company } = req.params;
   const {
