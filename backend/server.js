@@ -297,95 +297,6 @@ app.get("/api/expense-categories/:company", async (req, res) => {
   }
 });
 
-// Get all calender status for a company
-app.get("/api/status/:company", async (req, res) => {
-  const { company } = req.params;
-  const companyPool = getCompanyPool(company);
-
-  try {
-    const { rows } = await companyPool.query("SELECT id, status_desc FROM calendar_status ORDER BY status_desc ASC");
-    res.json({ success: true, statuses: rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Error fetching expense categories" });
-  }
-});
-
-
-// Get all calender status for a company
-app.get("/api/status/:company", async (req, res) => {
-  const { company } = req.params;
-  const companyPool = getCompanyPool(company);
-
-  try {
-    const { rows } = await companyPool.query("SELECT id, status_desc FROM calendar_status ORDER BY status_desc ASC");
-    res.json({ success: true, statuses: rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Error fetching calendar status" });
-  }
-});
-
-// Create new status
-app.post("/api/status/:company", async (req, res) => {
-  const { company } = req.params;
-  const companyPool = getCompanyPool(company);
-  const { status_desc } = req.body;
-
-  try {
-    const insertQuery = `
-      INSERT INTO calendar_status (status_desc)
-      VALUES ($1)
-      RETURNING *;
-    `;
-    const values = [status_desc];
-    const { rows } = await companyPool.query(insertQuery, values);
-
-    res.json({ success: true, status: rows[0] });
-  } catch (err) {
-    console.error("Error inserting new status:", err);
-    res.status(500).json({ success: false, message: "Error adding status" });
-  }
-});
-
-// Get all calender agendas for a company
-app.get("/api/calendar/:company", async (req, res) => {
-  const { company } = req.params;
-  const companyPool = getCompanyPool(company);
-
-  try {
-    const { rows } = await companyPool.query("SELECT c.id, c.agenda, cs.status_desc, c.time FROM calendar c LEFT JOIN calendar_status cs ON c.status_id = cs.id ORDER BY c.id");
-    res.json({ success: true, statuses: rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Error fetching calendar status" });
-  }
-});
-
-// Post a new agenda
-app.post("/api/calendar/:company", async (req, res) => {
-  const { company } = req.params;
-  const companyPool = getCompanyPool(company);
-  const { agenda, status_id, time } = req.body;
-
-  try {
-    const insertQuery = `
-      INSERT INTO calendar (agenda, status_id, time)
-      VALUES ($1, $2, $3)
-      RETURNING *;
-    `;
-    const values = [agenda, status_id || null, time || "00:00"];
-
-    const { rows } = await companyPool.query(insertQuery, values);
-
-    res.json({ success: true, agenda: rows[0] });
-  } catch (err) {
-    console.error("Error inserting new agenda:", err);
-    res.status(500).json({ success: false, message: "Error adding agenda" });
-  }
-});
-
-
 // Post a new expenditure
 app.post("/api/expenditures/:company", async (req, res) => {
   const { company } = req.params;
@@ -451,6 +362,113 @@ app.post("/api/expenditures/:company", async (req, res) => {
   } catch (err) {
     console.error("❌ Error inserting expenditure:", err);
     res.status(500).json({ success: false, message: "Error creating expenditure" });
+  }
+});
+
+// ---------------------
+// Calendar API
+// ---------------------
+
+// Get all calender status for a company
+app.get("/api/status/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const { rows } = await companyPool.query("SELECT id, status_desc FROM calendar_status ORDER BY status_desc ASC");
+    res.json({ success: true, statuses: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Error fetching expense categories" });
+  }
+});
+
+// Create new status
+app.post("/api/status/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+  const { status_desc } = req.body;
+
+  try {
+    const insertQuery = `
+      INSERT INTO calendar_status (status_desc)
+      VALUES ($1)
+      RETURNING *;
+    `;
+    const values = [status_desc];
+    const { rows } = await companyPool.query(insertQuery, values);
+
+    res.json({ success: true, status: rows[0] });
+  } catch (err) {
+    console.error("Error inserting new status:", err);
+    res.status(500).json({ success: false, message: "Error adding status" });
+  }
+});
+
+// Get all calender agendas for a company
+app.get("/api/calendar/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const query = `
+      SELECT c.id, c.agenda, c.time, c.date, c.status_id, cs.status_desc
+      FROM calendar c
+      LEFT JOIN calendar_status cs ON c.status_id = cs.id
+      ORDER BY c.date, c.time
+    `;
+    const { rows } = await companyPool.query(query);
+    res.json({ success: true, entries: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Error fetching calendar entries" });
+  }
+});
+
+// Add a new agenda entry
+app.post("/api/calendar/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+  const { agenda, status_id, time, date } = req.body;
+
+  try {
+    const insertQuery = `
+      INSERT INTO calendar (agenda, status_id, time, date, created_at)
+      VALUES ($1, $2, $3, $4, NOW())
+      RETURNING *
+    `;
+    const values = [agenda, status_id || null, time || "00:00", date];
+    const { rows } = await companyPool.query(insertQuery, values);
+
+    res.json({ success: true, entry: rows[0] });
+  } catch (err) {
+    console.error("Error inserting calendar entry:", err);
+    res.status(500).json({ success: false, message: "Error adding agenda" });
+  }
+});
+
+// Delete a status by id
+app.delete("/api/status/:company/:id", async (req, res) => {
+  const { company, id } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const { rowCount } = await companyPool.query(
+      `DELETE FROM calendar_status WHERE id = $1`,
+      [id]
+    );
+
+    if (rowCount === 0) {
+      return res.json({
+        success: false,
+        message: "Cannot delete status. It is used in the diary or does not exist."
+      });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Error deleting status" });
   }
 });
 
