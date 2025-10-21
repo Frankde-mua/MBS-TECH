@@ -28,11 +28,8 @@ export default function Calendar({
   const [statuses, setStatuses] = useState([]);
   const [showAgendaModal, setShowAgendaModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [newAgenda, setNewAgenda] = useState({
-    title: "",
-    time: "00:00",
-    status_id: "",
-  });
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [newAgenda, setNewAgenda] = useState({ title: "", time: "00:00", status_id: "" });
   const [newStatus, setNewStatus] = useState("");
   const [agendaDate, setAgendaDate] = useState("");
 
@@ -44,9 +41,7 @@ export default function Calendar({
     [current]
   );
 
-  function goMonth(offset) {
-    setCurrent((c) => new Date(c.getFullYear(), c.getMonth() + offset, 1));
-  }
+  const goMonth = (offset) => setCurrent((c) => new Date(c.getFullYear(), c.getMonth() + offset, 1));
 
   // --- Fetch statuses ---
   useEffect(() => {
@@ -65,6 +60,7 @@ export default function Calendar({
     fetchStatuses();
   }, [companyName]);
 
+  // --- Agenda Modal handlers ---
   const handleOpenAgendaModal = (date) => {
     setAgendaDate(date);
     setNewAgenda({ title: "", time: "00:00", status_id: "" });
@@ -84,6 +80,7 @@ export default function Calendar({
     setShowAgendaModal(false);
   };
 
+  // --- Status Modal handlers ---
   const handleSaveStatus = async () => {
     if (!newStatus.trim()) return alert("Enter a status description");
     try {
@@ -99,6 +96,31 @@ export default function Calendar({
       }
     } catch (err) {
       console.error("Error adding status:", err);
+    }
+  };
+
+  const handleDeleteStatus = async (statusId, statusDesc) => {
+    const confirmed = confirm(
+      `Please note status can only be deleted if it's not used in the diary.\nAre you sure you want to delete "${statusDesc}"?`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await axios.delete(
+        `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/status/${companyName}/${statusId}`,
+        { headers: { "ngrok-skip-browser-warning": "true" } }
+      );
+
+      if (res.data.success) {
+        alert("Status deleted successfully");
+        setStatuses((prev) => prev.filter((s) => s.id !== statusId));
+        if (newAgenda.status_id === statusId) setNewAgenda({ ...newAgenda, status_id: "" });
+      } else {
+        alert(res.data.message || "Cannot delete status. It is used in the diary.");
+      }
+    } catch (err) {
+      console.error("Error deleting status:", err);
+      alert("Error deleting status");
     }
   };
 
@@ -144,17 +166,12 @@ export default function Calendar({
                   <div
                     key={iso}
                     onClick={() => setSelectedDate(iso)}
-                    className={`p-2 rounded-lg cursor-pointer min-h-[64px] border ${
-                      isSelected ? "border-indigo-300 bg-indigo-50" : "border-transparent"
-                    } ${inMonth ? "" : "text-slate-400 opacity-60"}`}
+                    className={`p-2 rounded-lg cursor-pointer min-h-[64px] border ${isSelected ? "border-indigo-300 bg-indigo-50" : "border-transparent"} ${inMonth ? "" : "text-slate-400 opacity-60"}`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="text-xs font-medium">{d.getDate()}</div>
                       <button
-                        onClick={(ev) => {
-                          ev.stopPropagation();
-                          handleOpenAgendaModal(iso);
-                        }}
+                        onClick={(ev) => { ev.stopPropagation(); handleOpenAgendaModal(iso); }}
                         className="text-[10px] px-1 py-0.5 rounded bg-slate-100 hover:bg-slate-200"
                       >
                         +
@@ -162,19 +179,12 @@ export default function Calendar({
                     </div>
                     <div className="mt-1 space-y-1">
                       {dayEvents.slice(0, 2).map((e) => (
-                        <div
-                          key={e.id}
-                          className="text-[10px] bg-indigo-100 rounded px-1 py-0.5 truncate"
-                        >
+                        <div key={e.id} className="text-[10px] bg-indigo-100 rounded px-1 py-0.5 truncate">
                           {e.title}
                           {e.time ? ` • ${e.time}` : ""}
                         </div>
                       ))}
-                      {dayEvents.length > 2 && (
-                        <div className="text-[10px] text-slate-500">
-                          +{dayEvents.length - 2} more
-                        </div>
-                      )}
+                      {dayEvents.length > 2 && <div className="text-[10px] text-slate-500">+{dayEvents.length - 2} more</div>}
                     </div>
                   </div>
                 );
@@ -186,12 +196,7 @@ export default function Calendar({
         <section className="lg:col-span-1 bg-white p-3 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm font-semibold">Agenda — {selectedDate}</div>
-            <button
-              onClick={() => setSelectedDate(formatISO(new Date()))}
-              className="text-xs px-2 py-1 rounded hover:bg-slate-100"
-            >
-              Today
-            </button>
+            <button onClick={() => setSelectedDate(formatISO(new Date()))} className="text-xs px-2 py-1 rounded hover:bg-slate-100">Today</button>
           </div>
           {agendaForSelected.length === 0 ? (
             <div className="text-sm text-slate-500">No events. Click a date to add one.</div>
@@ -203,9 +208,7 @@ export default function Calendar({
                     <div className="text-sm font-medium">{e.title}</div>
                     <div className="text-xs text-slate-500">{e.time || "00:00"}</div>
                   </div>
-                  <button onClick={() => removeEvent(e.id)} className="text-red-500 text-xs">
-                    Remove
-                  </button>
+                  <button onClick={() => removeEvent(e.id)} className="text-red-500 text-xs">Remove</button>
                 </li>
               ))}
             </ul>
@@ -222,6 +225,7 @@ export default function Calendar({
             className="bg-white p-5 rounded-xl shadow-lg w-80"
           >
             <h2 className="text-lg font-semibold mb-3">New Agenda</h2>
+
             <label className="block text-sm mb-1">Title</label>
             <input
               type="text"
@@ -254,35 +258,65 @@ export default function Calendar({
               />
             </div>
 
-            <label className="block text-sm mb-1">Status</label>
-            <div className="flex items-center gap-2 mb-4">
-              <select
-                value={newAgenda.status_id}
-                onChange={(e) => setNewAgenda({ ...newAgenda, status_id: e.target.value })}
-                className="flex-1 border rounded px-2 py-1 text-sm"
-              >
-                <option value="">Select status</option>
-                {statuses.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.status_desc}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={() => setShowStatusModal(true)}
-                className="p-1.5 bg-slate-100 rounded hover:bg-slate-200"
-              >
-                <Plus size={16} />
-              </button>
+            {/* --- Status Dropdown --- */}
+            <div className="mb-4">
+              <label className="block text-sm mb-1">Status</label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowStatusDropdown((prev) => !prev)}
+                  className="w-full border rounded px-2 py-1 text-sm flex justify-between items-center"
+                >
+                  {newAgenda.status_id
+                    ? statuses.find((s) => s.id === newAgenda.status_id)?.status_desc
+                    : "Select status"}
+                  <span className="ml-2">▾</span>
+                </button>
+
+                {showStatusDropdown && (
+                  <div className="absolute w-full mt-1 bg-white border rounded shadow max-h-48 overflow-y-auto z-20">
+                    {statuses.map((s) => (
+                      <div
+                        key={s.id}
+                        className="flex justify-between items-center px-2 py-1 hover:bg-slate-100 text-sm cursor-pointer"
+                      >
+                        <span
+                          onClick={() => {
+                            setNewAgenda({ ...newAgenda, status_id: s.id });
+                            setShowStatusDropdown(false);
+                          }}
+                        >
+                          {s.status_desc}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteStatus(s.id, s.status_desc);
+                          }}
+                          className="text-red-500 text-xs ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+
+                    <div
+                      onClick={() => {
+                        setShowStatusModal(true);
+                        setShowStatusDropdown(false);
+                      }}
+                      className="px-2 py-1 text-sm text-indigo-500 hover:bg-indigo-50 cursor-pointer flex items-center gap-1"
+                    >
+                      <Plus size={14} /> Add new status
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end gap-2">
-              <button onClick={() => setShowAgendaModal(false)} className="px-3 py-1 text-sm rounded bg-slate-100">
-                Cancel
-              </button>
-              <button onClick={handleSaveAgenda} className="px-3 py-1 text-sm rounded bg-indigo-500 text-white">
-                Save
-              </button>
+              <button onClick={() => setShowAgendaModal(false)} className="px-3 py-1 text-sm rounded bg-slate-100">Cancel</button>
+              <button onClick={handleSaveAgenda} className="px-3 py-1 text-sm rounded bg-indigo-500 text-white">Save</button>
             </div>
           </motion.div>
         </div>
@@ -305,12 +339,8 @@ export default function Calendar({
               className="w-full border rounded px-2 py-1 mb-3 text-sm"
             />
             <div className="flex justify-end gap-2">
-              <button onClick={() => setShowStatusModal(false)} className="px-3 py-1 text-sm rounded bg-slate-100">
-                Cancel
-              </button>
-              <button onClick={handleSaveStatus} className="px-3 py-1 text-sm rounded bg-indigo-500 text-white">
-                Save
-              </button>
+              <button onClick={() => setShowStatusModal(false)} className="px-3 py-1 text-sm rounded bg-slate-100">Cancel</button>
+              <button onClick={handleSaveStatus} className="px-3 py-1 text-sm rounded bg-indigo-500 text-white">Save</button>
             </div>
           </motion.div>
         </div>
