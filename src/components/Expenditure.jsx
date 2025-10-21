@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { AgGridReact } from "ag-grid-react";
 import axios from "axios";
+import Loader from "./Utlies/Loader";
 import {
   AllCommunityModule,
   ClientSideRowModelModule,
@@ -16,9 +17,10 @@ ModuleRegistry.registerModules([
   ...(process.env.NODE_ENV !== "production" ? [ValidationModule] : []),
 ]);
 
-const Expenditure = ({ company }) => {
+const Expenditure = () => {
   const gridRef = useRef();
   const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const saved = JSON.parse(localStorage.getItem("user"));
   const companyName = saved?.company_name?.toLowerCase();
@@ -85,8 +87,7 @@ const Expenditure = ({ company }) => {
         field: "vat_amount",
         headerName: "VAT",
         minWidth: 100,
-        valueFormatter: (params) =>
-          `R${Number(params.value || 0).toFixed(2)}`,
+        valueFormatter: (params) => `R${Number(params.value || 0).toFixed(2)}`,
       },
       { field: "receipt_no", headerName: "Receipt No", minWidth: 120 },
       {
@@ -117,9 +118,15 @@ const Expenditure = ({ company }) => {
 
   // --- Add expense ---
   const handleAddExpense = async () => {
-    if (!form.category_id || !form.description || !form.amount) return;
+    setLoading(true);
+
+    if (!form.category_id || !form.description || !form.amount) {
+      setLoading(false);
+      return;
+    }
 
     try {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
       const res = await axios.post(
         `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/expenditures/${companyName}`,
         {
@@ -146,6 +153,8 @@ const Expenditure = ({ company }) => {
       }
     } catch (err) {
       console.error("Error adding expense:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -165,6 +174,9 @@ const Expenditure = ({ company }) => {
 
   return (
     <div>
+      {/*Adding loader */}
+        <Loader show={loading} label="Addig Expense.." style={{ fontSize: "0.875rem" }}/>
+      
       {/* Header */}
       <header className="mb-4">
         <h1 className="text-2xl font-semibold">Company Expenses</h1>
@@ -181,26 +193,27 @@ const Expenditure = ({ company }) => {
         />
 
         {/* ✅ Category (stores both ID + Name) */}
-       <select
-            value={form.category_id}
-            onChange={(e) => {
-              const selected = categories.find((c) => c.id === parseInt(e.target.value));
-              setForm({
-                ...form,
-                category_id: selected?.id,
-                category_name: selected?.category_name,
-              });
-            }}
-            className="px-3 py-1 border rounded"
-          >
-            <option value="">Select Category</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.category_name}
-              </option>
-            ))}
-          </select>
-
+        <select
+          value={form.category_id}
+          onChange={(e) => {
+            const selected = categories.find(
+              (c) => c.id === parseInt(e.target.value)
+            );
+            setForm({
+              ...form,
+              category_id: selected?.id,
+              category_name: selected?.category_name,
+            });
+          }}
+          className="px-3 py-1 border rounded"
+        >
+          <option value="">Select Category</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.category_name}
+            </option>
+          ))}
+        </select>
 
         <input
           type="text"
@@ -215,7 +228,7 @@ const Expenditure = ({ company }) => {
           placeholder="Amount"
           value={form.amount}
           onChange={(e) => {
-            const amount = parseFloat(e.target.value) || 0;
+            const amount = parseFloat(e.target.value);
             const vat_amount = (amount * 15) / 100;
             setForm({ ...form, amount, vat_amount });
           }}

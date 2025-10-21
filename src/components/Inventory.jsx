@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
+import { motion } from "framer-motion";
 import { TopSaleList, LeastSales, OrderTracking } from "./Utlies/InventoryList";
 import StockForm from "./Utlies/StockForm";
 import inventoryStock from "../data/inventory";
@@ -127,31 +128,60 @@ const InventoryGrid = ({ setLoading }) => {
 
 
       {/* --- Three Cards --- */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div
-          className="bg-green-300 p-4 rounded-2xl shadow-sm cursor-pointer hover:scale-105 transition-transform duration-200"
-          onClick={() => setModalOpen("top")}
-        >
-          <h4 className="text-2xl font-semibold mb-2">🔥 Top Sold Items</h4>
-          <TopSaleList />
-        </div>
+        {/* --- Three Cards --- */}
+<motion.div
+  initial="hidden"
+  animate="visible"
+  variants={{
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { staggerChildren: 0.2 },
+    },
+  }}
+  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4"
+>
+  {[
+    {
+      title: "🔥 Top Sold Items",
+      bg: "bg-green-300",
+      component: <TopSaleList />,
+      modal: "top",
+    },
+    {
+      title: "🥈 Least Sold Items",
+      bg: "bg-red-400",
+      component: <LeastSales />,
+      modal: "least",
+    },
+    {
+      title: "🚚 Order Tracking",
+      bg: "bg-slate-100",
+      component: <OrderTracking />,
+      modal: "order",
+    },
+  ].map((card, i) => (
+    <motion.div
+      key={i}
+      variants={{
+        hidden: { opacity: 0, y: 30 },
+        visible: { opacity: 1, y: 0 },
+      }}
+      whileHover={{
+        scale: 1.05,
+        boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+      }}
+      transition={{ type: "spring", stiffness: 120 }}
+      className={`${card.bg} p-4 rounded-2xl shadow-sm cursor-pointer transition-all duration-300`}
+      onClick={() => setModalOpen(card.modal)}
+    >
+      <h4 className="text-2xl font-semibold mb-2">{card.title}</h4>
+      {card.component}
+    </motion.div>
+  ))}
+</motion.div>
 
-        <div
-          className="bg-red-400 p-4 rounded-2xl shadow-sm cursor-pointer hover:scale-105 transition-transform duration-200"
-          onClick={() => setModalOpen("least")}
-        >
-          <h4 className="text-2xl font-semibold mb-2">🥈 Least Sold Items</h4>
-          <LeastSales />
-        </div>
-
-        <div
-          className="bg-slate-100 p-4 rounded-2xl shadow-sm cursor-pointer hover:scale-105 transition-transform duration-200"
-          onClick={() => setModalOpen("order")}
-        >
-          <h4 className="text-2xl font-semibold mb-2">🚚 Order Tracking</h4>
-          <OrderTracking />
-        </div>
-      </div>
 
       {/* --- Modal Overlay --- */}
       {modalOpen && (
