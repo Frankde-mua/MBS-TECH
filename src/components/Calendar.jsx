@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { Plus } from "lucide-react";
+import Loader from "./Utlies/Loader";
 
 export default function Calendar({
   current,
@@ -15,6 +16,7 @@ export default function Calendar({
 }) {
   const [events, setEvents] = useState([]);
   const [statuses, setStatuses] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showAgendaModal, setShowAgendaModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -64,7 +66,7 @@ export default function Calendar({
           id: e.id,
           title: e.agenda,
           date: new Date(e.date).toISOString().slice(0, 10),
-          time: e.time,
+          time: e.time.slice(0, 5),
           status_id: e.status_id,
           status_desc: e.status_desc
         }));
@@ -74,11 +76,8 @@ export default function Calendar({
     .catch(err => console.error(err));
   }, [companyName]);
 
-  console.log("After getting agendas from backend:");
-  console.log("Events:", events);
-
- // --- Open Agenda Modal ---
- const handleOpenAgendaModal = (date) => {
+  // --- Open Agenda Modal ---
+  const handleOpenAgendaModal = (date) => {
     const newDate = new Date(new Date(date).setDate(new Date(date).getDate() + 1));
     const dateFormated = newDate.toISOString().slice(0, 10);
     setAgendaDate(dateFormated);
@@ -88,14 +87,18 @@ export default function Calendar({
 
   // --- Save Agenda to backend ---
   const handleSaveAgenda = async () => {
-    if (!newAgenda.title) return alert("Please enter a title");
+    if (!newAgenda.title) {
+      setLoading(false);
+      return alert("Please enter a title");
+    }
+    setLoading(true);
 
     try {
       const res = await axios.post(
         `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/calendar/${companyName}`,
         {
           agenda: newAgenda.title,
-          time: newAgenda.time,
+          time: newAgenda.time.slice(0, 5),
           status_id: newAgenda.status_id || null,
           date: agendaDate
         },
@@ -104,12 +107,11 @@ export default function Calendar({
 
       if (res.data.success) {
         const e = res.data.agenda;
-        console.log("New agenda saved:", e);
         setEvents(ev => [...ev, {
           id: e.id,
           title: e.agenda,
           date: new Date(e.date).toISOString().slice(0, 10),
-          time: e.time,
+          time: e.time.slice(0, 5),
           status_id: e.status_id,
           status_desc: e.status_desc
         }].sort((a, b) => a.date.localeCompare(b.date)));
@@ -121,6 +123,8 @@ export default function Calendar({
     } catch (err) {
       console.error(err);
       alert("Error saving agenda");
+    }finally {
+      setLoading(false);
     }
   };
 
@@ -180,6 +184,9 @@ export default function Calendar({
 
   return (
     <div>
+      {/*Adding loader */}
+        <Loader show={loading} label="Addig agenda.." style={{ fontSize: "0.875rem" }}/>
+
       <header className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold">Calendar</h1>
