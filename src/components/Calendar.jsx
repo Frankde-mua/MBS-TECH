@@ -63,7 +63,7 @@ export default function Calendar({
         const dbEvents = res.data.entries.map(e => ({
           id: e.id,
           title: e.agenda,
-          date: e.date,
+          date: new Date(e.date).toISOString().slice(0, 10),
           time: e.time,
           status_id: e.status_id,
           status_desc: e.status_desc
@@ -73,6 +73,9 @@ export default function Calendar({
     })
     .catch(err => console.error(err));
   }, [companyName]);
+
+  console.log("After getting agendas from backend:");
+  console.log("Events:", events);
 
   // --- Open Agenda Modal ---
   const handleOpenAgendaModal = (date) => {
@@ -102,7 +105,7 @@ export default function Calendar({
         setEvents(ev => [...ev, {
           id: e.id,
           title: e.agenda,
-          date: e.date,
+          date: new Date(e.date).toISOString().slice(0, 10),
           time: e.time,
           status_id: e.status_id,
           status_desc: e.status_desc

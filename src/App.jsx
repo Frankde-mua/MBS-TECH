@@ -11,7 +11,7 @@ import {
 import { motion } from "framer-motion";
 import NexSysLogo from "./assets/nexsys-logo.png";
 import { Menu, X } from "lucide-react";
-import { SAMPLE_EVENTS, METRICS, CHART_DATA } from "./data/dashboard_data";
+import { METRICS, CHART_DATA } from "./data/dashboard_data";
 import Login from "./components/Auth/Login";
 import Loader from "./components/Utlies/Loader";
 import Billing from "./components/Billing";
@@ -43,7 +43,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [currentPage, setCurrentPage] = useState("dashboard");
-  const [events, setEvents] = useState(SAMPLE_EVENTS);
   const [selectedDate, setSelectedDate] = useState(formatISO(new Date()));
   const [current, setCurrent] = useState(() => new Date());
   const [loading, setLoading] = useState(false);
@@ -264,8 +263,6 @@ export default function App() {
             <Calendar
               current={current}
               setCurrent={setCurrent}
-              events={events}
-              setEvents={setEvents}
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
               startOfMonth={startOfMonth}

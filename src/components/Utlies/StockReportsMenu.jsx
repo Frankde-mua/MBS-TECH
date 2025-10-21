@@ -6,6 +6,7 @@ const FramesMonthToDate = () => <div>Frames Month To Date Content</div>;
 const GeneralReports = () => <div>General Reports Content</div>;
 const GoodsReceived = () => <div>Goods Received / Returned Listing Content</div>;
 const GrossProfit = () => <div>Gross Profit Content</div>;
+const JobCost = () => <div>Job Cost Content</div>;
 const ProductSalesReport = () => <div>Product Sales Report Content</div>;
 const Reorder = () => <div>Reorder Content</div>;
 const TagReport = () => <div>Tag Report Content</div>;
