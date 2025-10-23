@@ -489,6 +489,32 @@ app.delete("/api/calendar/:company/:id", async (req, res) => {
   }
 });
 
+// search for clientss
+app.get("/api/search-clients/:company", async (req, res) => {
+  const { company } = req.params;
+  const { name = "", surname = "" } = req.query; // 🔹 separate search fields
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const searchQuery = `
+      SELECT id, firstname AS name, surname
+      FROM clients
+      WHERE 
+        ($1 = '' OR firstname ILIKE '%' || $1 || '%')
+        AND ($2 = '' OR surname ILIKE '%' || $2 || '%')
+      ORDER BY client_name ASC
+      LIMIT 50;
+    `;
+
+    const { rows } = await companyPool.query(searchQuery, [name, surname]);
+
+    res.json({ success: true, clients: rows });
+  } catch (err) {
+    console.error("Error searching clients:", err);
+    res.status(500).json({ success: false, message: "Error searching clients" });
+  }
+});
+
 
 // ---------------------
 // ✅ Start Server

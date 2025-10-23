@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import Loader from "./Utlies/Loader";
+import ClientDropdown from "./Utlies/ClientDropdown"
 import { getAllStatus, getAllAgendas, saveNewAgenda, saveNewStatus, deleteStatus, deleteAgenda } from "./Utlies/Helpers/HelperFunctions";
 
 export default function Calendar({
@@ -163,6 +164,12 @@ export default function Calendar({
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center">
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white p-5 rounded-xl shadow-lg w-80">
             <h2 className="text-lg font-semibold mb-3">New Agenda</h2>
+            {/* Client Dropdown */}
+            <ClientDropdown
+            onSelectClient={(client) => {
+                setNewAgenda({ ...newAgenda, client });
+            }}
+            />
 
             <label className="block text-sm mb-1">Title</label>
             <input type="text" value={newAgenda.title} onChange={(e) => setNewAgenda({ ...newAgenda, title: e.target.value })} className="w-full border rounded px-2 py-1 mb-2 text-sm" placeholder="Enter title" />
