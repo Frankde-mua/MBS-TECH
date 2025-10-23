@@ -111,10 +111,9 @@ export const saveNewAgenda = async (newAgenda, agendaDate, setEvents, setLoading
 
 // --- Delete status ---
 export const deleteStatus = async (statusId, statusDesc, setStatuses) => {
-  if (!confirm(`Delete "${statusDesc}"?`)) return;
-
+    const confirmed = confirm(`Please note status can only be deleted if it's not used in the diary.\nAre you sure you want to delete "${statusDesc}"?`);
+  if (!confirmed) return;
   const companyName = getCompanyName();
-
   try {
     const res = await axios.delete(
       `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/status/${companyName}/${statusId}`,
@@ -132,7 +131,7 @@ export const deleteStatus = async (statusId, statusDesc, setStatuses) => {
 };
 
 // --- Remove event ---
-export const removeEvent = async (id, setEvents) => {
+export const deleteAgenda = async (id, setEvents) => {
   if (!confirm("Remove this event?")) return;
 
   const companyName = getCompanyName();

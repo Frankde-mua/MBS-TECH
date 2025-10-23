@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import axios from "axios";
 import { Plus } from "lucide-react";
 import Loader from "./Utlies/Loader";
-import { getAllStatus, getAllAgendas, saveNewAgenda, saveNewStatus } from "./Utlies/Helpers/HelperFunctions";
+import { getAllStatus, getAllAgendas, saveNewAgenda, saveNewStatus, deleteStatus, deleteAgenda } from "./Utlies/Helpers/HelperFunctions";
 
 export default function Calendar({
   current,
@@ -23,11 +22,7 @@ export default function Calendar({
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [newAgenda, setNewAgenda] = useState({ title: "", time: "00:00", status_id: "" });
   const [newStatus, setNewStatus] = useState("");
-  const [test, setTest] = useState("");
   const [agendaDate, setAgendaDate] = useState("");
-
-  const saved = JSON.parse(localStorage.getItem("user"));
-  const companyName = saved?.company_name?.toLowerCase();
 
   const monthLabel = useMemo(
     () => current.toLocaleString(undefined, { month: "long", year: "numeric" }),
@@ -73,45 +68,19 @@ export default function Calendar({
   // --- Save status to backend ---
   const handleSaveStatus = async () => {
     await saveNewStatus(newStatus, setStatuses, setLoading, () => {
-      setNewStatus(""); // reset input
+      setNewStatus("");
         });
-        setShowStatusModal(false);  // close modal
+        setShowStatusModal(false);
     };
 
 
-  const handleDeleteStatus = async (statusId, statusDesc) => {
-    const confirmed = confirm(`Please note status can only be deleted if it's not used in the diary.\nAre you sure you want to delete "${statusDesc}"?`);
-    if (!confirmed) return;
-
-    try {
-      const res = await axios.delete(
-        `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/status/${companyName}/${statusId}`,
-        { headers: { "ngrok-skip-browser-warning": "true" } }
-      );
-
-      if (res.data.success) {
-        alert("Status deleted successfully");
-        setStatuses(prev => prev.filter(s => s.id !== statusId));
-        if (newAgenda.status_id === statusId) setNewAgenda({ ...newAgenda, status_id: "" });
-      } else {
-        alert(res.data.message || "Cannot delete status. It is used in the diary.");
-      }
-    } catch (err) { console.error(err); alert("Error deleting status"); }
+  const handleDeleteStatus = async ({statusId, status_desc}) => {
+        await deleteStatus(statusId, status_desc, setStatuses);
   };
 
-  const removeEvent = async (id) => {
-    if (!confirm("Remove this event?")) return;
-    try {
-      await axios.delete(
-        `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/calendar/${companyName}/${id}`,
-        { headers: { "ngrok-skip-browser-warning": "true" } }
-      );
-      setEvents(ev => ev.filter(e => e.id !== id));
-    } catch (err) {
-      console.error(err);
-      alert("Error deleting event");
-    }
-  };
+   const removeEvent = async ({id}) => {
+        await deleteAgenda(id, setEvents)
+   };
 
   const agendaForSelected = events.filter(e => e.date === selectedDate);
 
@@ -181,7 +150,7 @@ export default function Calendar({
                     <div className="text-sm font-medium">{e.title}</div>
                     <div className="text-xs text-slate-500">{e.time || "00:00"}</div>
                   </div>
-                  <button onClick={() => removeEvent(e.id)} className="text-red-500 text-xs">Remove</button>
+                  <button onClick={() => removeEvent({id: e.id})} className="text-red-500 text-xs">Remove</button>
                 </li>
               ))}
             </ul>
@@ -219,7 +188,7 @@ export default function Calendar({
                     {statuses.map((s) => (
                       <div key={s.id} className="flex justify-between items-center px-2 py-1 hover:bg-slate-100 text-sm cursor-pointer">
                         <span onClick={() => { setNewAgenda({ ...newAgenda, status_id: s.id }); setShowStatusDropdown(false); }}>{s.status_desc}</span>
-                        <button onClick={(e) => { e.stopPropagation(); handleDeleteStatus(s.id, s.status_desc); }} className="text-red-500 text-xs ml-2">×</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteStatus({ statusId: s.id, status_desc: s.status_desc }); }} className="text-red-500 text-xs ml-2">×</button>
                       </div>
                     ))}
 
