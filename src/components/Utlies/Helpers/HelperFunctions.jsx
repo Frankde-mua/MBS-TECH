@@ -45,22 +45,25 @@ export const getAllAgendas   = async () => {
 };
 
 // --- Save new status ---
-export const saveNewStatus = async (newStatus, setStatuses) => {
+export const saveNewStatus = async (newStatus, setStatuses, setLoading) => {
     const companyName = getCompanyName();
     if (!newStatus.trim()) return alert("Enter a status description");
-
+    setLoading(true);
     try {
       const res = await axios.post(
         `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/status/${companyName}`,
         { status_desc: newStatus },
         { headers: { "ngrok-skip-browser-warning": "true" } }
       );
-
       if (res.data.success) {
         setStatuses(prev => [...prev, res.data.status]);
         console.log("Posted successful");
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+        console.error(err);
+     } finally{
+        setLoading(false);
+     }
   };
 
 // --- Save new agenda ---

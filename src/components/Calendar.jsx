@@ -72,7 +72,7 @@ export default function Calendar({
 
   // --- Save status to backend ---
   const handleSaveStatus = async () => {
-    await saveNewStatus(newStatus, setStatuses, () => {
+    await saveNewStatus(newStatus, setStatuses, setLoading, () => {
       setNewStatus(""); // reset input
         });
         setShowStatusModal(false);  // close modal
