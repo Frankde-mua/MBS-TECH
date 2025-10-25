@@ -15,6 +15,7 @@ export default function Loader({ show = false, label = "NexSys" }) {
           <motion.div className="relative flex items-center justify-center mb-4 w-32 h-32">
             {/* Label text in the center */}
             <motion.div
+             style={{ fontSize: "0.875rem" }}
               className="text-white text-2xl font-bold tracking-wide z-10"
               initial={{ scale: 0.9, opacity: 0.8 }}
               animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.8, 1, 0.8] }}
