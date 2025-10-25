@@ -26,6 +26,10 @@ const Expenditure = () => {
   const saved = JSON.parse(localStorage.getItem("user"));
   const companyName = saved?.company_name?.toLowerCase();
 
+  /* `https://franklin-unsprinkled-corrie.ngrok-free.dev/api - switched from remote server link to local
+   host for faster reponse time. Tunnel response becomes slow as applicarions get bigger or the more
+   the request/response data increases in size. */ 
+   
   // --- Form state ---
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
@@ -44,7 +48,7 @@ const Expenditure = () => {
     const fetchCategories = async () => {
       try {
         const res = await axios.get(
-          `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/expense-categories/${companyName}`,
+          `http://localhost:5000/api/expense-categories/${companyName}`,
           { headers: { "ngrok-skip-browser-warning": "true" } }
         );
         if (res.data.success) setCategories(res.data.categories);
@@ -60,9 +64,25 @@ const Expenditure = () => {
     if (!companyName) return;
     try {
       const res = await axios.get(
-        `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/expenditures/${companyName}`
+        `http://localhost:5000/api/expenditures/${companyName}`
       );
-      if (res.data.success) setExpenses(res.data.expenditures);
+      if (res.data.success){
+        const dbExpenses = res.data.expenditures.map((e) => ({
+          id: e.id,
+          date: new Date(e.date).toISOString().slice(0, 10),
+          supplier: e.supplier || "",
+          category_name: e.category_name,
+          description: e.description,
+          amount: e.amount,
+          payment_method: e.payment_method || "",
+          receipt_no: e.receipt_no,
+          scan: e.scan || "",
+          notes: e.notes || "",
+          vat_amount: e.vat_amount
+        }));
+        console.log(" here is your data from db", dbExpenses)
+        setExpenses(dbExpenses);
+      } 
     } catch (err) {
       console.error("Error fetching expenditures:", err);
     }
@@ -75,26 +95,27 @@ const Expenditure = () => {
   // --- Grid Columns ---
   const columnDefs = useMemo(
     () => [
-      { field: "date", headerName: "Date", minWidth: 120 },
-      { field: "category_name", headerName: "Category", minWidth: 150 },
-      { field: "description", headerName: "Description", flex: 1 },
+      { field: "date", headerName: "Date", minWidth: 50 },
+      { field: "supplier", headerName: "Supplier", minWidth: 50 },
+      { field: "category_name", headerName: "Category", minWidth: 80 },
+      { field: "description", headerName: "Description", minWidth: 80 },
       {
         field: "amount",
         headerName: "Amount",
-        minWidth: 120,
+        minWidth: 50,
         valueFormatter: (params) => `R${Number(params.value).toFixed(2)}`,
       },
       {
         field: "vat_amount",
         headerName: "VAT",
-        minWidth: 100,
+        minWidth: 50,
         valueFormatter: (params) => `R${Number(params.value || 0).toFixed(2)}`,
       },
-      { field: "receipt_no", headerName: "Receipt No", minWidth: 120 },
+      { field: "receipt_no", headerName: "Receipt No", minWidth: 60 },
       {
         field: "scan",
         headerName: "Scan",
-        minWidth: 120,
+        minWidth: 130,
         cellRenderer: (params) =>
           params.value ? (
             <a href={params.value} target="_blank" rel="noreferrer">
@@ -129,7 +150,7 @@ const Expenditure = () => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 2500));
       const res = await axios.post(
-        `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/expenditures/${companyName}`,
+        `http://localhost:5000/api/expenditures/${companyName}`,
         {
           ...form,
           amount: parseFloat(form.amount),
@@ -198,7 +219,9 @@ const Expenditure = () => {
         <input
           type="date"
           value={form.date}
-          onChange={(e) => setForm({ ...form, date: e.target.value })}
+          onChange={(e) => setForm({ ...form, date: new Date(
+      new Date(e.target.value).setDate(new Date(e.target.value).getDate() + 1)
+    ) })}
           className="px-3 py-1 border rounded"
         />
 

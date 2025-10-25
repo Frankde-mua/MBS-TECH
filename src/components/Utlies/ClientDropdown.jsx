@@ -9,6 +9,7 @@ export default function ClientDropdown({ onSelectClient }) {
   const [clients, setClients] = useState([]);
   const [filters, setFilters] = useState({ name: "", surname: "" });
   const [loading, setLoading] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
 
   const dropdownRef = useRef(null);
 
@@ -29,17 +30,18 @@ export default function ClientDropdown({ onSelectClient }) {
   // Search clients by name/surname
   const handleSearch = async () => {
     if (!filters.name && !filters.surname) return alert("Enter name or surname");
-    alert(filters.name, filters.surname)
+    console.log("Searching for:", filters.name, filters.surname);
     setLoading(true);
 
     try {
+      console.log("Searching clients for company:", companyName); // last thing that gets logged
       const res = await axios.get(
-        `https://franklin-unsprinkled-corrie.ngrok-free.dev/api/search-clients/${companyName}`,
+        `http://localhost:5000/api/search-clients/${companyName}`,
         { params: { name: filters.name, surname: filters.surname } }
       );
       if (res.data.success){ setClients(res.data.clients);
-        alert("after setting data");
-        alert(res.data.clients);
+        console.log("after setting data");
+        console.log(res.data.clients);
       }
       else setClients([]);
     } catch (err) {
@@ -58,7 +60,8 @@ export default function ClientDropdown({ onSelectClient }) {
         onClick={() => setShowDropdown((prev) => !prev)}
         className="w-full border rounded px-2 py-1 text-sm flex justify-between items-center"
       >
-        Select client <span className="ml-2">▾</span>
+        {selectedClient ? `${selectedClient.name} ${selectedClient.surname}` : "Select client"}
+        <span className="ml-2">▾</span>
       </button>
 
       {showDropdown && (
@@ -98,6 +101,7 @@ export default function ClientDropdown({ onSelectClient }) {
                   key={client.id}
                   onClick={() => {
                     onSelectClient(client);
+                    setSelectedClient(client);
                     setShowDropdown(false);
                   }}
                   className="px-2 py-1 hover:bg-slate-100 cursor-pointer rounded"

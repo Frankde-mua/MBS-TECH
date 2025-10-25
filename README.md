@@ -8,10 +8,6 @@ Quick starter React project (Vite) with a single-page dashboard that includes:
 - Inventory page helps keep track of your inventory - export or import data
 - Customer page help manage cliently data
 
-Financial Management System (FMS)
-Inventory Management System (IMS)
-Practice Management System (PMA)
-
 **How to run**
 1. Install dependencies:
    ```bash

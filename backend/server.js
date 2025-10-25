@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import pkg from "pg";
 import { usersToSeed } from "./data.js"
+import bodyParser from "body-parser";
+// import your other stuff like getCompanyPool etc.
 
 const { Pool } = pkg;
 
@@ -11,6 +13,20 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:5000", // your local dev server
+//       "htttp://localhost:3000", // your React dev server
+//       "https://franklin-unsprinkled-corrie.ngrok-free.dev", // your ngrok URL
+//     ],
+//     credentials: true,
+//   })
+// );
+
+// // ✅ Middleware setup
+// app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 5000;
 
@@ -297,6 +313,39 @@ app.get("/api/expense-categories/:company", async (req, res) => {
   }
 });
 
+// getting all expenses
+app.get("/api/expenditures/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const insertQuery = `
+      SELECT
+        date,
+        supplier,
+        category_name,
+        description,
+        amount,
+        payment_method,
+        receipt_no,
+        scan,
+        notes,
+        created_at,
+        category_id,
+        vat_amount
+      
+      FROM expenditure
+    `;
+
+
+    const { rows } = await companyPool.query(insertQuery);
+    res.json({ success: true, expenditures: rows });
+  } catch (err) {
+    console.error("❌ Error getting all expenditure:", err);
+    res.status(500).json({ success: false, message: "Error getting expenditures" });
+  }
+});
+
 // Post a new expenditure
 app.post("/api/expenditures/:company", async (req, res) => {
   const { company } = req.params;
@@ -366,7 +415,7 @@ app.post("/api/expenditures/:company", async (req, res) => {
 });
 
 // ---------------------
-// Calendar API
+// ✅ Calendar API (Updated)
 // ---------------------
 
 // Get all calender status for a company
@@ -380,6 +429,37 @@ app.get("/api/status/:company", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "Error fetching expense categories" });
+  }
+});
+
+// Get all calendar entries for a company (joined with clients + status)
+app.get("/api/calendar/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const query = `
+      SELECT 
+        c.id,
+        c.agenda,
+        c.time,
+        c.date,
+        c.status_id,
+        s.status_desc,
+        c.client_id,
+        cl.firstname AS name,
+        cl.surname
+      FROM calendar c
+      LEFT JOIN calendar_status s ON c.status_id = s.id
+      LEFT JOIN clients cl ON c.client_id = cl.id
+      ORDER BY c.date ASC, c.time ASC;
+    `;
+
+    const { rows } = await companyPool.query(query);
+    res.json({ success: true, entries: rows });
+  } catch (err) {
+    console.error("❌ Error fetching calendar entries:", err);
+    res.status(500).json({ success: false, message: "Error fetching calendar entries" });
   }
 });
 
@@ -402,6 +482,101 @@ app.post("/api/status/:company", async (req, res) => {
   } catch (err) {
     console.error("Error inserting new status:", err);
     res.status(500).json({ success: false, message: "Error adding status" });
+  }
+});
+
+// Add a new agenda entry (returns joined record)
+app.post("/api/calendar/:company", async (req, res) => {
+  const { company } = req.params;
+  const companyPool = getCompanyPool(company);
+  const { agenda, status_id, time, date, client_id } = req.body;
+
+  try {
+    // 1️⃣ Insert the agenda
+    const insertQuery = `
+      INSERT INTO calendar (agenda, status_id, client_id, time, date, created_at)
+      VALUES ($1, $2, $3, $4, $5, NOW())
+      RETURNING id;
+    `;
+    const values = [agenda, status_id || null, client_id || null, time || "00:00", date];
+    const insertResult = await companyPool.query(insertQuery, values);
+    const newId = insertResult.rows[0].id;
+
+    // 2️⃣ Fetch the inserted record joined with status + client
+    const joinedQuery = `
+      SELECT 
+        c.id,
+        c.agenda,
+        c.time,
+        c.date,
+        c.status_id,
+        s.status_desc,
+        c.client_id,
+        cl.firstname AS name,
+        cl.surname
+      FROM calendar c
+      LEFT JOIN calendar_status s ON c.status_id = s.id
+      LEFT JOIN clients cl ON c.client_id = cl.id
+      WHERE c.id = $1;
+    `;
+    const { rows } = await companyPool.query(joinedQuery, [newId]);
+
+    res.json({ success: true, agenda: rows[0] });
+  } catch (err) {
+    console.error("❌ Error inserting calendar entry:", err);
+    res.status(500).json({ success: false, message: "Error adding agenda" });
+  }
+});
+
+// Update an existing agenda by ID (returns joined record)
+app.put("/api/calendar/:company/:id", async (req, res) => {
+  const { company, id } = req.params;
+  const { title, time, status_id, date } = req.body;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    await companyPool.query(
+      `UPDATE calendar
+       SET agenda = $1,
+           time = $2,
+           status_id = $3,
+           date = $4
+       WHERE id = $5`,
+      [title, time, status_id, date, id]
+    );
+
+    const { rows } = await companyPool.query(
+      `SELECT c.*, s.status_desc, cl.firstname AS name, cl.surname
+       FROM calendar c
+       LEFT JOIN calendar_status s ON c.status_id = s.id
+       LEFT JOIN clients cl ON c.client_id = cl.id
+       ORDER BY c.date`
+    );
+
+    res.json({ success: true, entries: rows });
+  } catch (err) {
+    console.error("Update agenda error:", err);
+    res.status(500).json({ success: false, message: "Failed to update agenda" });
+  }
+});
+
+
+
+// Delete an agenda entry
+app.delete("/api/calendar/:company/:id", async (req, res) => {
+  const { company, id } = req.params;
+  const companyPool = getCompanyPool(company);
+
+  try {
+    const { rowCount } = await companyPool.query(`DELETE FROM calendar WHERE id = $1`, [id]);
+    if (rowCount === 0) {
+      return res.status(404).json({ success: false, message: "Agenda not found" });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error deleting agenda:", err);
+    res.status(500).json({ success: false, message: "Error deleting agenda" });
   }
 });
 
@@ -430,69 +605,14 @@ app.delete("/api/status/:company/:id", async (req, res) => {
   }
 });
 
-// Get all calender agendas for a company
-app.get("/api/calendar/:company", async (req, res) => {
-  const { company } = req.params;
-  const companyPool = getCompanyPool(company);
-
-  try {
-    const query = `
-      SELECT c.id, c.agenda, c.time, c.date, c.status_id, cs.status_desc
-      FROM calendar c
-      LEFT JOIN calendar_status cs ON c.status_id = cs.id
-      ORDER BY c.date, c.time
-    `;
-    const { rows } = await companyPool.query(query);
-    res.json({ success: true, entries: rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Error fetching calendar entries" });
-  }
-});
-
-// Add a new agenda entry
-app.post("/api/calendar/:company", async (req, res) => {
-  const { company } = req.params;
-  const companyPool = getCompanyPool(company);
-  const { agenda, status_id, time, date } = req.body;
-
-  try {
-    const insertQuery = `
-      INSERT INTO calendar (agenda, status_id, time, date, created_at)
-      VALUES ($1, $2, $3, $4, NOW())
-      RETURNING *
-    `;
-    const values = [agenda, status_id || null, time || "00:00", date];
-    const { rows } = await companyPool.query(insertQuery, values);
-
-    res.json({ success: true, agenda: rows[0] });
-  } catch (err) {
-    console.error("Error inserting calendar entry:", err);
-    res.status(500).json({ success: false, message: "Error adding agenda" });
-  }
-});
-
-// Delete a agenda by id
-app.delete("/api/calendar/:company/:id", async (req, res) => {
-  const { company, id } = req.params;
-  const companyPool = getCompanyPool(company);
-
-  try {
-    const { rowCount } = await companyPool.query(
-      `DELETE FROM calendar WHERE id = $1`,
-      [id]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Error deleting agenda" });
-  }
-});
+// ---------------------
+// Client Router
+// ---------------------
 
 // search for clientss
 app.get("/api/search-clients/:company", async (req, res) => {
   const { company } = req.params;
-  const { name = "", surname = "" } = req.query; // 🔹 separate search fields
+  const { name = "", surname = "" } = req.query;
   const companyPool = getCompanyPool(company);
 
   try {
@@ -502,7 +622,7 @@ app.get("/api/search-clients/:company", async (req, res) => {
       WHERE 
         ($1 = '' OR firstname ILIKE '%' || $1 || '%')
         AND ($2 = '' OR surname ILIKE '%' || $2 || '%')
-      ORDER BY client_name ASC
+      ORDER BY firstname  ASC
       LIMIT 50;
     `;
 
@@ -514,7 +634,6 @@ app.get("/api/search-clients/:company", async (req, res) => {
     res.status(500).json({ success: false, message: "Error searching clients" });
   }
 });
-
 
 // ---------------------
 // ✅ Start Server

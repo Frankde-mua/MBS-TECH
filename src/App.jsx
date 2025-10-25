@@ -21,21 +21,13 @@ import renderInventory from "./components/Inventory";
 import Profile from "./components/Profile";
 import Expenditure from "./components/Expenditure";
 import SuperAdminDashboard from "./components/SuperAdminDashboard";
-
-function startOfMonth(date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-function endOfMonth(date) {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
-}
-function addDays(date, days) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
-function formatISO(date) {
-  return date.toISOString().slice(0, 10);
-}
+import {
+  startOfMonth,
+  endOfMonth,
+  addDays,
+  formatISO,
+  handleLogoutHelper,
+} from "./helpers/HelperFunctions.jsx";
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -72,17 +64,13 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleLogout = () => {
-    setLoaderLabel("Logging out...");
-    setLoading(true);
-    setTimeout(() => {
-      localStorage.removeItem("user");
-      setUser(null);
-      setCurrentPage("dashboard");
-      setLoaderLabel("NexSys");
-      setLoading(false);
-    }, 1200);
-  };
+  const handleLogout = () =>
+  handleLogoutHelper({
+    setLoaderLabel,
+    setLoading,
+    setUser,
+    setCurrentPage,
+  });
 
   if (checkingAuth) return <Loader show={true} label="Loading..." />;
   if (!user) return <Login onLogin={setUser} />;
