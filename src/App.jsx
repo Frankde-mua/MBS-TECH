@@ -14,6 +14,7 @@ import { Menu, X } from "lucide-react";
 import { METRICS, CHART_DATA } from "./data/dashboard_data";
 import Login from "./components/Auth/Login";
 import Loader from "./components/Utlies/Loader";
+import Email from "./components/Mailing";
 import Billing from "./components/Billing";
 import Calendar from "./components/Calendar";
 import ClientGrid from "./components/Customers";
@@ -274,9 +275,14 @@ export default function App() {
           )}
 
           {currentPage === "users" && role !== "user" && (
+            <div>
+            <header className="mb-4">
+        <h2 className="text-xl font-semibold mb-4">Manage Users</h2>
+          </header>
             <div className="p-6 bg-white rounded-2xl shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">Manage Users</h2>
               <p>Admins and Superadmins can view or create new users here.</p>
+            </div>
+                <Email/>
             </div>
           )}
         </div>
