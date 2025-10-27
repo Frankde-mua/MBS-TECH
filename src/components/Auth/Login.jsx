@@ -15,10 +15,10 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+    //https://franklin-unsprinkled-corrie.ngrok-free.dev  - switched to localhost for development
     try {
       const res = await axios.post(
-        "https://franklin-unsprinkled-corrie.ngrok-free.dev/api/login",
+        "http://localhost:5000/api/login",
         form
       );
 

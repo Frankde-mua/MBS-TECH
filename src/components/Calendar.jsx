@@ -272,7 +272,7 @@ export default function Calendar({
                 >
                   <div>
                     <div className="text-sm font-medium">{e.title}</div>
-                    <div className="text-sm font-medium">{e.status_desc}</div>
+                    <div className="text-sm text-slate-500 font-medium">{e.status_desc}</div>
                     <div className="text-sm font-medium">{e.name} {e.surname}</div>
                     <div className="text-xs text-slate-500">
                       {e.time || "00:00"}

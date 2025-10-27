@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import ClientList from "./Utlies/ClientList"
+import ClientList from "./Utlies/ClientList";
 
 const BILLING_SERVICES = [
   { id: 1, name: "Website Hosting", price: 150 },
@@ -16,21 +16,20 @@ const Billing = () => {
   const [manualList, setManualList] = useState([]);
   const [showInvoice, setShowInvoice] = useState(false);
   const [showClients, setShowClients] = useState(false);
-
-  // 🟢 Track selected client
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [showSalesModal, setShowSalesModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
-  
-  // 🟢 Load selected client from localStorage when modal closes
-    const handleSelectClient = (client) => {
-        setSelectedClient(client);
-        setShowClients(false); // close modal
-        localStorage.setItem("selectedClient", JSON.stringify(client)); // optional
-    };
 
-    useEffect(() => {
-        const client = JSON.parse(localStorage.getItem("selectedClient"));
-        if (client) setSelectedClient(client);
-    }, [showClients]); // recheck when modal closes
+  const handleSelectClient = (client) => {
+    setSelectedClient(client);
+    setShowClients(false);
+    localStorage.setItem("selectedClient", JSON.stringify(client));
+  };
+
+  useEffect(() => {
+    const client = JSON.parse(localStorage.getItem("selectedClient"));
+    if (client) setSelectedClient(client);
+  }, [showClients]);
 
   const toggleService = (id) => {
     setSelectedServices((prev) =>
@@ -38,7 +37,6 @@ const Billing = () => {
     );
   };
 
-  // 💰 Calculate total including discounts
   const totalBilling =
     selectedServices.reduce((sum, id) => {
       const svc = BILLING_SERVICES.find((s) => s.id === id);
@@ -49,10 +47,8 @@ const Billing = () => {
       return sum + (m.price - discountAmount);
     }, 0);
 
-    // Calculate value with the total val
-    const totalVAt = totalBilling * 0.15
+  const totalVAt = totalBilling * 0.15;
 
-  // ➕ Add manual service with discount
   const handleAddManual = () => {
     if (!manualService || !manualPrice) return;
     setManualList([
@@ -71,112 +67,261 @@ const Billing = () => {
   const userData = JSON.parse(localStorage.getItem("userProfile") || "{}");
 
   return (
-    <div>
+    <div className="h-screen overflow-hidden flex flex-col">
       <header className="flex items-center justify-between mb-6">
-      <div>
+        <div>
           <h1 className="text-2xl font-semibold">Billing</h1>
           <p className="text-sm text-slate-600">Create some invoices.</p>
         </div>
-        </header>
-      {/* Quick Services */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm mb-6">
-        <h2 className="text-sm font-semibold mb-4">Quick Service Selection</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {BILLING_SERVICES.map((s) => (
-            <div
-              key={s.id}
-              onClick={() => toggleService(s.id)}
-              className={`p-3 rounded-lg border cursor-pointer ${
-                selectedServices.includes(s.id)
-                  ? "border-indigo-400 bg-indigo-50"
-                  : "border-slate-200 hover:bg-slate-50"
-              }`}
-            >
-              <div className="font-medium text-sm">{s.name}</div>
-              <div className="text-xs text-slate-500">R{s.price}.00</div>
-            </div>
-          ))}
+      </header>
+
+      {/* Scrollable container */}
+      <div className="overflow-y-auto pr-2 space-y-6 pb-10">
+
+        {/* 🟦 Quick Services */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
+          <h2 className="text-sm font-semibold mb-4">Quick Service Selection</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {BILLING_SERVICES.map((s) => (
+              <div
+                key={s.id}
+                onClick={() => toggleService(s.id)}
+                className={`p-3 rounded-lg border cursor-pointer ${
+                  selectedServices.includes(s.id)
+                    ? "border-indigo-400 bg-indigo-50"
+                    : "border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <div className="font-medium text-sm">{s.name}</div>
+                <div className="text-xs text-slate-500">R{s.price}.00</div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-       
-      {/* Client Search */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm mb-6">
-        <h2 className="text-sm font-semibold mb-4">Client Details</h2>
-        <div className="flex flex-col sm:flex-row gap-2">
+
+        {/* 🟦 Client Details */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
+          <h2 className="text-sm font-semibold mb-4">Client Details</h2>
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
-            type="text"
-            placeholder="First Name"
-            value={selectedClient?.name || ""}
-            className="border rounded-lg p-2 flex-1 text-sm"
-            disabled
+              type="text"
+              placeholder="First Name"
+              value={selectedClient?.name || ""}
+              className="border rounded-lg p-2 flex-1 text-sm"
+              disabled
             />
             <input
-            type="text"
-            placeholder="Last Name"
-            value={selectedClient?.surname || ""}
-            className="border rounded-lg p-2 flex-1 text-sm"
-            disabled
+              type="text"
+              placeholder="Last Name"
+              value={selectedClient?.surname || ""}
+              className="border rounded-lg p-2 flex-1 text-sm"
+              disabled
             />
             <input
-            type="text"
-            placeholder="Email"
-            value={selectedClient?.email || ""}
-            className="border rounded-lg p-2 flex-1 text-sm"
-            disabled
+              type="text"
+              placeholder="Email"
+              value={selectedClient?.email || ""}
+              className="border rounded-lg p-2 flex-1 text-sm"
+              disabled
             />
             <button
-            onClick={() => setShowClients(true)}
-            className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-indigo-700"
+              onClick={() => setShowClients(true)}
+              className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-indigo-700"
             >
-            {selectedClient ? "Change" : "Search"}
+              {selectedClient ? "Change" : "Search"}
             </button>
-        </div>
+          </div>
 
-        {selectedClient && (
+          {selectedClient && (
             <div className="mt-3 text-xs text-slate-500">
-            <p><strong>Cell:</strong> {selectedClient.cell}</p>
-            <p><strong>Type:</strong> {selectedClient.type}</p>
-            <p><strong>Address:</strong> {selectedClient.address}</p>
+              <p><strong>Cell:</strong> {selectedClient.cell}</p>
+              <p><strong>Type:</strong> {selectedClient.type}</p>
+              <p><strong>Address:</strong> {selectedClient.address}</p>
             </div>
-        )}
+          )}
         </div>
 
+        {/* 🟦 Prescription Headers */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
+            {/* Rate */}
+            <div className="flex items-center justify-between">
+              <span className="font-semibold">Rate</span>
+              <select className="border rounded-lg p-2 w-full text-sm">
+                <option>SAOA</option>
+                <option>Private</option>
+                <option>Medical Aid</option>
+              </select>
+              <button
+                className="ml-2 px-2 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition"
+                onClick={() => setShowRateModal(true)}
+              >
+                +
+              </button>
+            </div>
 
-      {/* Manual Add */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm mb-6">
-        <h2 className="text-sm font-semibold mb-4">Manual Service Entry</h2>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
-            placeholder="Service Name"
-            value={manualService}
-            onChange={(e) => setManualService(e.target.value)}
-            className="border rounded-lg p-2 flex-1 text-sm"
-          />
-          <input
-            type="number"
-            placeholder="Discount in %"
-            value={discountService}
-            onChange={(e) => setDiscountService(e.target.value)}
-            className="border rounded-lg p-2 w-32 text-sm"
-          />
-          <input
-            type="number"
-            placeholder="Price (R)"
-            value={manualPrice}
-            onChange={(e) => setManualPrice(e.target.value)}
-            className="border rounded-lg p-2 w-32 text-sm"
-          />
-          <button
-            onClick={handleAddManual}
-            className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-indigo-700"
-          >
-            Add
-          </button>
+            {/* Sales Person */}
+            <div className="flex items-center justify-between">
+              <span className="font-semibold">Sales Person</span>
+              <select className="border rounded-lg p-2 w-full text-sm">
+                <option>NONE</option>
+                <option>John</option>
+                <option>Mary</option>
+              </select>
+              <button
+                className="ml-2 px-2 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition"
+                onClick={() => setShowSalesModal(true)}
+              >
+                +
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Summary */}
+        {/* 🟦 Prescription */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
+          <h2 className="text-sm font-semibold mb-4">Prescription</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm border table-fixed">
+              <colgroup>
+                <col style={{ width: "8%" }} />
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "10%" }} />
+              </colgroup>
+
+              <thead className="bg-slate-100 text-slate-700">
+                <tr>
+                  <th className="p-2 text-left">Eye</th>
+                  <th className="p-2 text-left">Sphere</th>
+                  <th className="p-2 text-left">Cyl</th>
+                  <th className="p-2 text-left">Axis</th>
+                  <th className="p-2 text-left">Prism</th>
+                  <th className="p-2 text-left">Base</th>
+                  <th className="p-2 text-left">Add</th>
+                  <th className="p-2 text-left">Date</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {["Right", "Left"].map((eye) => (
+                  <tr key={eye} className="border-t">
+                    <td className="p-2 font-medium">{eye}</td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-2">
+                        <select className="border rounded p-1 text-xs w-12">
+                          <option>+</option>
+                          <option>-</option>
+                        </select>
+                        <input
+                          type="number"
+                          step="0.25"
+                          className="border rounded p-1 text-xs w-full"
+                          defaultValue="0.00"
+                        />
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-2">
+                        <select className="border rounded p-1 text-xs w-12">
+                          <option>+</option>
+                          <option>-</option>
+                        </select>
+                        <input
+                          type="number"
+                          step="0.25"
+                          className="border rounded p-1 text-xs w-full"
+                          defaultValue="0.00"
+                        />
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        className="border rounded p-1 text-xs w-full"
+                        defaultValue="0"
+                        min="0"
+                        max="180"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="border rounded p-1 text-xs w-full"
+                        defaultValue="0.00"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <select className="border rounded p-1 text-xs w-full">
+                        <option>Up</option>
+                        <option>Down</option>
+                        <option>In</option>
+                        <option>Out</option>
+                      </select>
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        step="0.25"
+                        className="border rounded p-1 text-xs w-full"
+                        defaultValue="0.00"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="date"
+                        className="border rounded p-1 text-xs w-full"
+                        defaultValue={new Date().toISOString().slice(0, 10)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 🟦 Manual Add */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
+          <h2 className="text-sm font-semibold mb-4">Manual Service Entry</h2>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              placeholder="Service Name"
+              value={manualService}
+              onChange={(e) => setManualService(e.target.value)}
+              className="border rounded-lg p-2 flex-1 text-sm"
+            />
+            <input
+              type="number"
+              placeholder="Discount in %"
+              value={discountService}
+              onChange={(e) => setDiscountService(e.target.value)}
+              className="border rounded-lg p-2 w-32 text-sm"
+            />
+            <input
+              type="number"
+              placeholder="Price (R)"
+              value={manualPrice}
+              onChange={(e) => setManualPrice(e.target.value)}
+              className="border rounded-lg p-2 w-32 text-sm"
+            />
+            <button
+              onClick={handleAddManual}
+              className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-indigo-700"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        {/* 🟦 Summary */}
+        {/* Summary */}
       <div className="bg-white p-4 rounded-2xl shadow-sm">
         <h2 className="text-sm font-semibold mb-4">Billing Summary</h2>
         {selectedServices.length === 0 && manualList.length === 0 ? (
@@ -346,19 +491,45 @@ const Billing = () => {
           </div>
         </div>
       )}
+      </div>
 
-      {/* 🟦 Client Modal */}
-      {showClients && (
-        <div id="clientModal" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-    <div className=" bg-white rounded-2xl p-6 shadow-lg text-center w-full max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl transition-all duration-300">
-            <h2 className="text-2xl font-bold mb-4">Client List</h2>
-            <p className="mb-4">Content for search a client goes here.</p>
-             <ClientList onSelect={handleSelectClient}/>
+      {/* Modals remain outside */}
+      {showRateModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
+          <div className="bg-white p-6 rounded-2xl shadow-lg w-80">
+            <h3 className="text-lg font-semibold mb-3">Add New Rate</h3>
+            <button
+              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mt-3"
+              onClick={() => setShowRateModal(false)}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
 
+      {showSalesModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
+          <div className="bg-white p-6 rounded-2xl shadow-lg w-80">
+            <h3 className="text-lg font-semibold mb-3">Add New Sales Person</h3>
+            <button
+              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mt-3"
+              onClick={() => setShowSalesModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
+      {showClients && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-6 shadow-lg text-center w-full max-w-4xl transition-all duration-300">
+            <h2 className="text-2xl font-bold mb-4">Client List</h2>
+            <ClientList onSelect={handleSelectClient} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

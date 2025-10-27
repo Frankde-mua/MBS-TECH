@@ -10,11 +10,11 @@ export default function SuperAdminDashboard() {
   const fetchData = async () => {
     try {
       const usersRes = await axios.get(
-        "https://franklin-unsprinkled-corrie.ngrok-free.dev/api/superadmin/users",
+        "http://localhost:5000/api/superadmin/users",
          {headers: { "ngrok-skip-browser-warning": "true" }}
       );
       const companiesRes = await axios.get(
-        "https://franklin-unsprinkled-corrie.ngrok-free.dev/api/superadmin/companies",
+        "http://localhost:5000/api/superadmin/companies",
         {headers: { "ngrok-skip-browser-warning": "true" }}
       );
       // ✅ Update the single 'data' state
@@ -43,7 +43,7 @@ export default function SuperAdminDashboard() {
 
     try {
       const res = await axios.post(
-        "https://franklin-unsprinkled-corrie.ngrok-free.dev/api/create-user",
+        "http://localhost/api/create-user",
         { ...newUser, creatorUsername }
       );
       alert(res.data.message);
