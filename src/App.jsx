@@ -277,8 +277,8 @@ export default function App() {
           {currentPage === "users" && role !== "user" && (
             <div>
               <br />
-            <div className="p-6 bg-white pt-3 rounded-2xl shadow-sm w-[1100px] h-[560px] max-w-full mx-auto">
-              <h4 className="text-xl font-semibold mb-4">Company Mail</h4>
+            <div className="p-6 bg-white pt-3 rounded-2xl shadow-sm w-[1250px] h-[560px] max-w-full mx-auto">
+              <h4 className="text-xl font-semibold mb-4">Your Mail</h4>
               <Email />
             </div>
             </div>

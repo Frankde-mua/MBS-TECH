@@ -112,7 +112,7 @@ const Email = () => {
                 </div>
               </div>
             ) : emails.length === 0 ? (
-              <p className="text-gray-500">No emails to display.</p>
+              <p className="text-gray-500">Welcome to your mailbox.</p>
             ) : (
               <div className="space-y-4">
                 {emails.map((m, i) => (
