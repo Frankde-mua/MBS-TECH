@@ -46,7 +46,8 @@ const Payment = () => {
   };
 
   return (
-    <div className="p-6 bg-white rounded-2xl shadow-sm w-full max-w-5xl mx-auto">
+    <div>
+    <div className="p-6 bg-white rounded-2xl shadow-sm mx-auto">
       <h2 className="text-xl font-semibold text-slate-700 mb-4">💳 Payments</h2>
 
       {/* Payment Form */}
@@ -172,6 +173,7 @@ const Payment = () => {
         </table>
       </div>
     </div>
+  </div>
   );
 };
 

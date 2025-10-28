@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import EmailSettings from "./Email/EmailSettings.jsx";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://franklin-unsprinkled-corrie.ngrok-free.dev/api";
 const user = JSON.parse(localStorage.getItem("user"));
 
 const Email = () => {
