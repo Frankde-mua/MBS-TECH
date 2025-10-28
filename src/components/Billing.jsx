@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import FinancialEnquiries from "./Utlies/Enquiries";
 import Payment from "./Utlies/Payment";
+import Invoice from "./Utlies/Invoice"
 
 const SemiNavbar = () => {
   const tabs = ["Enquiries", "Payment", "Invoice", "Quote", "E-Transact"];
@@ -39,6 +40,7 @@ const SemiNavbar = () => {
     <div className="mt-6">
     {activeTab === "Enquiries" && <FinancialEnquiries />}
     {activeTab === "Payment" && <Payment />}
+    {activeTab === "Invoice" && <Invoice />}
     </div>
     </div>
   );
