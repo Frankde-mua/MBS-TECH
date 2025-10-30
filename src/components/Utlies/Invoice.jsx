@@ -69,7 +69,7 @@ const Invoice = () => {
 
   return (
     <div className="p-6 bg-white rounded-2xl shadow-lg mt-6">
-      <h1 className="text-2xl font-semibold text-slate-800 mb-6">🧾 Invoice</h1>
+      <h2 className="text-2xl font-semibold text-slate-800 mb-6">🧾 Invoice</h2>
 
       <div className="space-y-6">
         {/* Quick Services */}

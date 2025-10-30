@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import FinancialEnquiries from "./Utlies/Enquiries";
 import Payment from "./Utlies/Payment";
-import Invoice from "./Utlies/Invoice"
+import Invoice from "./Utlies/Invoice";
+import ETransact from "./Utlies/ETransact";
 
 const SemiNavbar = () => {
-  const tabs = ["Enquiries", "Payment", "Invoice", "Quote", "E-Transact"];
+  const tabs = ["Enquiries", "Payment", "Invoice", "Credit Note", "Quote", "E-Transact"];
   const [activeTab, setActiveTab] = useState("Enquiries");
 
   return (
@@ -41,6 +42,7 @@ const SemiNavbar = () => {
     {activeTab === "Enquiries" && <FinancialEnquiries />}
     {activeTab === "Payment" && <Payment />}
     {activeTab === "Invoice" && <Invoice />}
+    {activeTab === "E-Transact" && <ETransact />}
     </div>
     </div>
   );
