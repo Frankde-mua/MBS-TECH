@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ClientList from "./ClientList";
+import QouteConvert from "./Modals/QouteConversionModal";
 
 const BILLING_SERVICES = [
   { id: 1, name: "Website Hosting", price: 150 },
@@ -17,6 +18,10 @@ const Invoice = () => {
   const [showInvoice, setShowInvoice] = useState(false);
   const [showClients, setShowClients] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [showQouteConvert, setShowQouteConvert] = useState(false);
+
+
+
 
   // 🧠 Load selected client from localStorage when modal closes
   const handleSelectClient = (client) => {
@@ -69,7 +74,14 @@ const Invoice = () => {
 
   return (
     <div className="p-6 bg-white rounded-2xl shadow-lg mt-6">
-      <h2 className="text-2xl font-semibold text-slate-800 mb-6">🧾 Invoice</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold text-slate-800 mb-6">🧾 Invoice</h2>
+        <button className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
+          onClick={() => setShowQouteConvert(true)}
+        >
+          Convert Qoute
+        </button>
+      </div>
 
       <div className="space-y-6">
         {/* Quick Services */}
@@ -82,11 +94,10 @@ const Invoice = () => {
               <div
                 key={s.id}
                 onClick={() => toggleService(s.id)}
-                className={`p-3 rounded-lg border cursor-pointer transition ${
-                  selectedServices.includes(s.id)
+                className={`p-3 rounded-lg border cursor-pointer transition ${selectedServices.includes(s.id)
                     ? "border-indigo-400 bg-indigo-50"
                     : "border-slate-200 hover:bg-slate-100"
-                }`}
+                  }`}
               >
                 <div className="font-medium text-sm">{s.name}</div>
                 <div className="text-xs text-slate-500">R{s.price}.00</div>
@@ -345,6 +356,16 @@ const Invoice = () => {
           </div>
         </div>
       )}
+
+      {/* Qoute Modal */}
+      {showQouteConvert && (
+        <QouteConvert
+          onClose={() => setShowQouteConvert(false)}
+          client={selectedClient}
+          onConvert={(quote) => handleQuoteConvert(quote)}
+        />
+      )}
+
     </div>
   );
 };
