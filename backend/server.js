@@ -14,16 +14,16 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// app.use(
-//   cors({
-//     origin: [
-//       "http://localhost:5000", // your local dev server
-//       "htttp://localhost:3000", // your React dev server
-//       "https://franklin-unsprinkled-corrie.ngrok-free.dev", // your ngrok URL
-//     ],
-//     credentials: true,
-//   })
-// );
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5000", // your local dev server
+      "htttp://localhost:3000", // your React dev server
+      "https://franklin-unsprinkled-corrie.ngrok-free.dev", // your ngrok URL
+    ],
+    credentials: true,
+  })
+);
 
 // // ✅ Middleware setup
 // app.use(bodyParser.json());

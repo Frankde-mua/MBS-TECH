@@ -1,112 +1,218 @@
-// 🟦 Quick Services Section
 import React, { useState } from "react";
 
-const BILLING_SERVICES = [
-  { id: 1, name: "Eye Ekzam", price: 150 },
-  { id: 2, name: "SEO Optimization", price: 300 },
-  { id: 3, name: "Email Marketing", price: 200 },
-  { id: 4, name: "Social Media Management", price: 400 },
-  { id: 5, name: "Graphic Design", price: 250 },
-  { id: 6, name: "App Maintenance", price: 350 },
-  { id: 7, name: "Consultation", price: 180 },
-  { id: 8, name: "Domain Registration", price: 120 },
-  { id: 9, name: "Cloud Storage", price: 500 },
-  { id: 10, name: "Technical Support", price: 220 },
-];
+export default function QuickServiceSection({ BILLING_SERVICES, billingRows, setBillingRows }) {
+  const [visibleServices, setVisibleServices] = useState(BILLING_SERVICES.slice(0, 6));
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [serviceToEdit, setServiceToEdit] = useState(null);
+  const [newService, setNewService] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
-export default function QuickServiceSection({
-  selectedServices,
-  toggleService,
-  addBillingRow, // function to add to main billing grid
-  removeBillingRow, // function to remove from main billing grid
-}) {
-  const [quickServices, setQuickServices] = useState(BILLING_SERVICES.slice(0, 6));
-  const [showSelector, setShowSelector] = useState(false);
-  const [replaceIndex, setReplaceIndex] = useState(null);
+  // 🔹 Select or deselect a service (LEFT CLICK)
+  const handleSelectService = (service) => {
+    const alreadySelected = selectedServices.find((s) => s.id === service.id);
 
-  const handleQuickServiceClick = (service) => {
-    toggleService(service.id);
-    if (selectedServices.includes(service.id)) {
-      removeBillingRow(service);
+    if (alreadySelected) {
+      // Deselect service
+      setSelectedServices((prev) => prev.filter((s) => s.id !== service.id));
+      setBillingRows((prev) =>
+        prev.map((r) =>
+          r.tariff === service.name ? { ...r, tariff: "", tariffCode: "", fee: 0 } : r
+        )
+      );
     } else {
-      addBillingRow(service);
+      // Select service
+      setSelectedServices((prev) => {
+        if (prev.length >= 6) return [...prev.slice(1), service]; // keep only 6
+        return [...prev, service];
+      });
+
+      // Update billing rows
+      let updated = false;
+      setBillingRows((prev) => {
+        const newRows = prev.map((r) => {
+          if (!updated && (!r.tariff || r.tariff.trim() === "")) {
+            updated = true;
+            return {
+              ...r,
+              tariff: service.name,
+              tariffCode: service.code || "—",
+              fee: service.price || 0,
+              discount: service.discount || 0,
+              qty: 1,
+            };
+          }
+          return r;
+        });
+
+        if (!updated) {
+          newRows.push({
+            id: Date.now(),
+            tariff: service.name,
+            tariffCode: service.code || "—",
+            fee: service.price || 0,
+            discount: service.discount || 0,
+            qty: 1,
+          });
+        }
+
+        return newRows;
+      });
     }
   };
 
-  const handleAddNewClick = (index) => {
-    setReplaceIndex(index);
-    setShowSelector(true);
+  // 🔹 Right-click (open modal)
+  const handleRightClick = (e, service) => {
+    e.preventDefault();
+    setServiceToEdit(service);
+    setModalOpen(true);
   };
 
-  const handleSelectNewService = (service) => {
-    const updated = [...quickServices];
-    updated[replaceIndex] = service;
-    setQuickServices(updated);
-    setShowSelector(false);
-    setReplaceIndex(null);
+  // 🔹 Request confirmation if the old service is already used
+  const handleUpdateRequest = () => {
+    const updated = BILLING_SERVICES.find((s) => s.id.toString() === newService);
+    if (!updated) return;
+
+    const isUsed = billingRows.some((r) => r.tariff === serviceToEdit.name);
+    if (isUsed) {
+      setShowConfirm(true);
+    } else {
+      applyServiceUpdate(updated);
+    }
+  };
+
+  // 🔹 Confirm replacement
+  const handleConfirmReplace = () => {
+    const updated = BILLING_SERVICES.find((s) => s.id.toString() === newService);
+    if (updated) applyServiceUpdate(updated);
+    setShowConfirm(false);
+  };
+
+  // 🔹 Apply the actual replacement
+  const applyServiceUpdate = (updated) => {
+    setVisibleServices((prev) =>
+      prev.map((s) => (s.id === serviceToEdit.id ? updated : s))
+    );
+
+    setSelectedServices((prev) =>
+      prev.map((s) => (s.id === serviceToEdit.id ? updated : s))
+    );
+
+    setBillingRows((prev) =>
+      prev.map((r) =>
+        r.tariff === serviceToEdit.name
+          ? {
+              ...r,
+              tariff: updated.name,
+              tariffCode: updated.code,
+              fee: updated.price,
+            }
+          : r
+      )
+    );
+
+    setModalOpen(false);
+    setServiceToEdit(null);
+    setNewService("");
+  };
+
+  const handleChangeVisible = (e) => {
+    const selectedIds = Array.from(e.target.selectedOptions, (opt) => opt.value);
+    const selected = BILLING_SERVICES.filter((s) => selectedIds.includes(s.id.toString()));
+    setVisibleServices(selected.slice(0, 6));
   };
 
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-sm">
-      <h2 className="text-sm font-semibold mb-4">Quick Service Selection</h2>
+    <div className="bg-white rounded-2xl shadow p-4 relative">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold">Quick Services</h2>
+      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {quickServices.map((s, index) => (
-          <div
-            key={s.id}
-            onClick={() => handleQuickServiceClick(s)}
-            className={`p-3 rounded-lg border cursor-pointer transition ${
-              selectedServices.includes(s.id)
-                ? "border-indigo-400 bg-indigo-50"
-                : "border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-sm">{s.name}</div>
-                <div className="text-xs text-slate-500">R{s.price}.00</div>
-              </div>
+      {/* Quick service buttons */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        {visibleServices.map((service) => {
+          const isSelected = selectedServices.some((s) => s.id === service.id);
+          return (
+            <button
+              key={service.id}
+              onClick={() => handleSelectService(service)}
+              onContextMenu={(e) => handleRightClick(e, service)}
+              className={`p-3 border rounded-xl text-sm font-medium transition-all duration-200 ${
+                isSelected
+                  ? "bg-blue-600 text-white border-blue-600 shadow"
+                  : "bg-gray-50 hover:bg-blue-50 border-gray-300 text-gray-800"
+              }`}
+            >
+              {service.name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 🔹 Modal for updating service */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-80">
+            <h3 className="text-lg font-semibold mb-4">Update Quick Service</h3>
+
+            <select
+              value={newService}
+              onChange={(e) => setNewService(e.target.value)}
+              className="w-full border rounded-md px-2 py-1 mb-4 text-sm"
+            >
+              <option value="">Select new service</option>
+              {BILLING_SERVICES.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex justify-end gap-2">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddNewClick(index);
-                }}
-                className="text-indigo-600 text-lg font-bold ml-2 hover:text-indigo-800"
+                onClick={() => setModalOpen(false)}
+                className="px-3 py-1 text-sm border rounded-md text-gray-600"
               >
-                +
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateRequest}
+                disabled={!newService}
+                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md"
+              >
+                Update
               </button>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* 🟦 Tariff Selector Modal */}
-      {showSelector && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-6 relative">
-            <h3 className="text-lg font-semibold mb-3">Select a New Quick Service</h3>
+      {/* 🔹 Confirmation dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-80">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              Replace existing service?
+            </h3>
+            <p className="text-sm text-gray-600 mb-5">
+              The service <strong>{serviceToEdit?.name}</strong> is currently used in billing.
+              Replacing it will update all related rows.
+            </p>
 
-            <div className="max-h-80 overflow-y-auto border rounded-lg divide-y">
-              {BILLING_SERVICES.map((s) => (
-                <div
-                  key={s.id}
-                  onClick={() => handleSelectNewService(s)}
-                  className="p-3 cursor-pointer hover:bg-indigo-50 transition"
-                >
-                  <div className="flex justify-between">
-                    <span>{s.name}</span>
-                    <span className="text-slate-500 text-sm">R{s.price}.00</span>
-                  </div>
-                </div>
-              ))}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-3 py-1 text-sm border rounded-md text-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmReplace}
+                className="px-3 py-1 text-sm bg-red-600 text-white rounded-md"
+              >
+                Confirm Replace
+              </button>
             </div>
-
-            <button
-              onClick={() => setShowSelector(false)}
-              className="mt-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg px-4 py-2 text-sm"
-            >
-              Close
-            </button>
           </div>
         </div>
       )}
